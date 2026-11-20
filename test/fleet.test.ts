@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { startMockGateway } from "./mock-gateway.js";
@@ -47,6 +48,21 @@ test("loadRosters returns empty rosters on missing/corrupt files", () => {
   assert.deepEqual(loadRosters().openclaw, []);
 });
 
+test("loadRosters degrades to empty when JSON parses but shape is wrong", () => {
+  // JSON.parse("null") succeeds — must not throw on .agents access
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cbl-"));
+  const wrongShape = path.join(dir, "wrong.json");
+  fs.writeFileSync(wrongShape, "null");
+  assert.deepEqual(loadRosters(wrongShape).openclaw, []);
+  assert.deepEqual(loadRosters(wrongShape).hermes, []);
+  const noAgents = path.join(dir, "no-agents.json");
+  fs.writeFileSync(noAgents, JSON.stringify({ hermes: [] }));
+  assert.deepEqual(loadRosters(noAgents).openclaw, []);
+  const agentsNotArray = path.join(dir, "agents-not-array.json");
+  fs.writeFileSync(agentsNotArray, JSON.stringify({ agents: "nope" }));
+  assert.deepEqual(loadRosters(agentsNotArray).openclaw, []);
+});
+
 test("agentHealth hits /health and returns json", async (t) => {
   const srv = await startMockGateway(18991);
   t.after(() => srv.close());
@@ -54,14 +70,19 @@ test("agentHealth hits /health and returns json", async (t) => {
   assert.deepEqual(h, { ok: true, status: "live" });
 });
 
-test("agentHealth surfaces timeouts as rejection (pollOnce maps to error)", async (t) => {
-  const srv = await startMockGateway(18992);
-  await new Promise<void>((ok) => {
-    srv.close(() => ok());
-  });
+test("agentHealth aborts via AbortController when server accepts but never responds", async (t) => {
+  // Accepts connections but never writes a response -> exercises the abort
+  // path, not connection-refused.
+  const srv = net.createServer(() => {});
+  await new Promise<void>((ok) => srv.listen(18992, "127.0.0.1", () => ok()));
+  t.after(() => srv.close());
+  const started = Date.now();
   await assert.rejects(
-    agentHealth({ host: "127.0.0.1", port: 18992, timeoutMs: 200 }),
+    agentHealth({ host: "127.0.0.1", port: 18992, timeoutMs: 300 }),
   );
+  const elapsed = Date.now() - started;
+  assert.ok(elapsed >= 250, `expected abort at ~300ms, rejected after ${elapsed}ms`);
+  assert.ok(elapsed < 5000, `abort must not fall back to the 5s default, took ${elapsed}ms`);
 });
 
 test("createFleet seeds cache, fires on up-down transition, hermes stays static", async (t) => {
@@ -89,8 +110,13 @@ test("createFleet seeds cache, fires on up-down transition, hermes stays static"
     srv.close();
   });
 
-  // first poll seeds with no transition
-  while (!fleet.healthCache().has("ada")) await new Promise((r) => setTimeout(r, 50));
+  // first poll seeds with no transition (bounded wait — fail fast if seeding breaks)
+  let seeded = false;
+  for (let i = 0; i < 40 && !seeded; i++) {
+    seeded = fleet.healthCache().has("ada");
+    if (!seeded) await new Promise((r) => setTimeout(r, 50));
+  }
+  assert.ok(seeded, "fleet failed to seed health cache for ada within 2s");
   assert.deepEqual(fleet.healthCache().get("ada"), { ok: true, status: "live" });
   assert.deepEqual(fleet.hermesStatus(), new Map([["miranda", "ssh"]]));
   assert.equal(transitions.length, 0);

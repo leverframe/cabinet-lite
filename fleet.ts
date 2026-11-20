@@ -22,7 +22,9 @@ export interface HermesEntry {
 function loadJson(p: string | undefined): { agents: any[] } {
   if (!p) return { agents: [] };
   try {
-    return JSON.parse(fs.readFileSync(p, "utf8"));
+    const parsed: unknown = JSON.parse(fs.readFileSync(p, "utf8"));
+    const agents = (parsed as { agents?: unknown } | null)?.agents;
+    return { agents: Array.isArray(agents) ? (agents as any[]) : [] };
   } catch {
     return { agents: [] };
   }
@@ -43,11 +45,13 @@ export function loadRosters(agentsPath?: string, hermesPath?: string) {
   };
 }
 
+export type Health = { ok: boolean; status?: string } | { error: string };
+
 export async function agentHealth(a: {
   host: string;
   port: number;
   timeoutMs?: number;
-}): Promise<any> {
+}): Promise<Health> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), a.timeoutMs ?? 5000);
   try {
@@ -58,7 +62,6 @@ export async function agentHealth(a: {
   }
 }
 
-export type Health = { ok: boolean; status?: string } | { error: string };
 export type TransitionFn = (entry: {
   name: string;
   from: Health;
@@ -82,8 +85,18 @@ export function createFleet(agentsPath?: string, hermesPath?: string, opts?: Fle
   let timer: NodeJS.Timeout | undefined;
   let running = false;
 
+  function scheduleNext() {
+    if (!running) return;
+    timer = setTimeout(() => {
+      void pollOnce().finally(scheduleNext);
+    }, pollIntervalMs);
+    timer.unref();
+  }
+
   async function pollOnce() {
-    for (const agent of roster.openclaw) {
+    for (let i = 0; i < roster.openclaw.length; i++) {
+      const agent = roster.openclaw[i];
+      if (i > 0) await new Promise((r) => setTimeout(r, POLL_GAP_MS));
       let next: Health;
       try {
         next = await agentHealth({
@@ -91,8 +104,8 @@ export function createFleet(agentsPath?: string, hermesPath?: string, opts?: Fle
           port: agent.port,
           timeoutMs: HEALTH_TIMEOUT_MS,
         });
-      } catch (err: any) {
-        next = { error: err?.message ?? String(err) };
+      } catch (err) {
+        next = { error: err instanceof Error ? err.message : String(err) };
       }
       const prev = healths.get(agent.name);
       const prevOk = prev !== undefined && !("error" in prev) && prev.ok;
@@ -100,9 +113,14 @@ export function createFleet(agentsPath?: string, hermesPath?: string, opts?: Fle
       healths.set(agent.name, next);
       if (prev !== undefined && prevOk !== nextOk) {
         const feed = { name: agent.name, from: prev, to: next, at: Date.now() };
-        for (const fn of transitionFns) fn(feed);
+        for (const fn of transitionFns) {
+          try {
+            fn(feed);
+          } catch (err) {
+            console.error(`[fleet] transition subscriber threw for ${agent.name}:`, err);
+          }
+        }
       }
-      await new Promise((r) => setTimeout(r, POLL_GAP_MS));
     }
   }
 
@@ -117,13 +135,11 @@ export function createFleet(agentsPath?: string, hermesPath?: string, opts?: Fle
     start() {
       if (running) return;
       running = true;
-      void pollOnce();
-      timer = setInterval(() => void pollOnce(), pollIntervalMs);
-      timer.unref();
+      void pollOnce().finally(scheduleNext);
     },
     stop() {
       running = false;
-      if (timer) clearInterval(timer);
+      if (timer) clearTimeout(timer);
       timer = undefined;
     },
     hermesStatus(): Map<string, string> {
