@@ -1,13 +1,13 @@
 # Configuration
 
-cabinet-lite is configured entirely through two roster files and environment
+cabinet-lite is configured entirely through roster files and environment
 variables. No config file of its own.
 
 ## Rosters
 
 The roster files use the same shape as
 [fleet-bridge](https://github.com/leverframe/fleet-bridge)'s `agents.json`
-(OpenClaw) and `hermes-agents.json` (Hermes). Both are `{"agents": [...]}`.
+(OpenClaw) and `hermes-agents.json` (Hermes). All are `{"agents": [...]}`.
 
 ### OpenClaw roster (`FLEET_BRIDGE_AGENTS`)
 
@@ -33,9 +33,11 @@ The roster files use the same shape as
 | `role` | yes | one-line role, shown on the lever tile |
 | `tier` | no | fleet tier (e.g. `worker`) |
 | `model` | no | model the agent runs |
-| `port` | yes | gateway port on the host — polled at `http://{host}:{port}/health` |
+| `port` | yes | gateway port on the host — polled at `http://{host}:{port}{healthPath}` |
 | `host` | yes | hostname reachable from the box running cabinet-lite |
 | `token` | yes | gateway token — used only server-side if invoke lands in v2 |
+| `runtime` | no | display label; defaults to `openclaw` |
+| `healthPath` | no | HTTP probe path; defaults to `/health` |
 
 ### Hermes roster (`FLEET_BRIDGE_HERMES`)
 
@@ -62,6 +64,53 @@ The roster files use the same shape as
 | `host` | yes | host the agent lives on |
 | `ssh_user` | yes | SSH user for Hermes invocations (v2) |
 | `binary` | yes | Hermes binary path/name on the host (v2) |
+| `runtime` | no | display label; defaults to `hermes` |
+
+### Generic runtime roster (`FLEET_BRIDGE_GENERIC`)
+
+Any HTTP-probeable agent joins the box by roster line — the runtime label is
+data, not a code branch. Generic entries poll exactly like OpenClaw entries
+(same 5s timeout, stagger, cache, live↔down transitions), just at their own
+`healthPath`. Tokens are optional: gateways may be unauthenticated.
+
+```json
+{
+  "agents": [
+    {
+      "name": "khoj",
+      "role": "search",
+      "host": "userve1c",
+      "port": 18080,
+      "runtime": "khoj",
+      "healthPath": "/status"
+    },
+    {
+      "name": "otel-gw",
+      "role": "collector",
+      "host": "userve1c",
+      "port": 14317,
+      "healthPath": "/metrics"
+    }
+  ]
+}
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `name` | yes | agent name |
+| `role` | yes | one-line role, shown on the lever tile |
+| `model` | no | model the agent runs |
+| `host` | yes | hostname reachable from the box running cabinet-lite |
+| `port` | yes | port on the host |
+| `healthPath` | yes (in practice) | probe path — omitting it polls `/health` |
+| `runtime` | no | display label; defaults to `openclaw` |
+| `token` | no | optional gateway token (never leaves the box) |
+
+Roster entries without `runtime` default by file: OpenClaw/generic lines to
+`openclaw`, Hermes lines to `hermes`. The UI badge map knows
+`openclaw`/`hermes`/`mcp`; any other label renders in the generic steel badge
+style (e.g. `KHOJ`), and the RUNTIMES side-rail lists every distinct label
+present in the roster.
 
 ### Secrets never reach the browser
 
@@ -89,7 +138,7 @@ recovers on the next poll.
 
 | What | Cadence |
 |---|---|
-| Agent health polls (`/health` per OpenClaw agent, 250ms stagger between agents, 5s timeout) | every 10s |
+| Agent health polls (per OpenClaw + generic agent, 250ms stagger between agents, 5s timeout) | every 10s |
 | Plate backends (cabinet + fleet-health) | every 30s |
 | SSE snapshot broadcast | every 10s, plus immediately on health transitions |
 
@@ -97,8 +146,10 @@ recovers on the next poll.
 
 - In-memory **ring buffer, capped at 500 entries**, newest first. Restarts
   the box reset the feed — it is a journal, not a store.
-- In v1, feed entries are **health transitions**: an OpenClaw agent flipping
-  live↔down adds an entry (`health recovered` / `health degraded: <error>`).
-- Every entry carries runtime provenance (`openclaw` / `hermes` / `mcp`),
+- In v1, feed entries are **health transitions**: any HTTP-probeable agent
+  (OpenClaw or generic) flipping live↔down adds an entry (`health recovered` /
+  `health degraded: <error>`).
+- Every entry carries runtime provenance — the entry's `runtime` label
+  (`openclaw` / `hermes` / `mcp` today, any roster label in general),
   a timestamp, latency, and ok/fail — the feed is the same surface v2's
   lever pulls will land in.
