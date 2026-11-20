@@ -135,10 +135,12 @@ export function startServer(opts: ServerOptions = {}) {
         "cache-control": "no-cache",
         connection: "keep-alive",
       });
-      res.write(sseFrame(snapshot()));
+      // attach error/close handling before the first write — a client that
+      // RSTs immediately would otherwise emit an uncaught 'error' event
       clients.add(res);
       res.on("error", () => clients.delete(res));
       res.on("close", () => clients.delete(res));
+      res.write(sseFrame(snapshot()));
       return;
     }
     if (url.pathname === "/") {
