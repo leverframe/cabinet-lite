@@ -190,15 +190,20 @@
   function renderInvoke(snap) {
     var sel = document.getElementById("inv-agent");
     var agents = (snap.roster && snap.roster.openclaw) || [];
+    var prev = sel.value; /* preserve selection across re-renders */
     if (!agents.length) {
       sel.innerHTML = '<option>—</option>';
       return;
     }
     sel.innerHTML = agents
-      .map(function (a, i) {
-        return '<option' + (i === 0 ? " selected" : "") + ">" + esc(a.name) + "</option>";
+      .map(function (a) {
+        return "<option>" + esc(a.name) + "</option>";
       })
       .join("");
+    var stillThere = Array.prototype.some.call(sel.options, function (o) {
+      return o.value === prev;
+    });
+    sel.value = stillThere ? prev : sel.options[0].value;
   }
 
   function renderSide(snap, feed, counts) {
@@ -228,9 +233,12 @@
     var escal = today.filter(function (e) {
       return !e.ok && /needs_human|escalat/i.test(e.summary || "");
     });
+    function plural(n, word) {
+      return "<b>" + n + "</b> " + word + (n === 1 ? "" : "s");
+    }
     el.innerHTML =
-      "since 00:00 — <b>" + today.length + "</b> pulls · <b>" + fails.length + "</b> failures · <b>" +
-      escal.length + "</b> escalations";
+      "since 00:00 — " + plural(today.length, "pull") + " · " + plural(fails.length, "failure") +
+      " · " + plural(escal.length, "escalation");
   }
 
   function computeCounts(snap) {
