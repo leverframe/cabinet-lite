@@ -170,3 +170,95 @@ test("server serves snapshot, ui, SSE stream, and 404s unknown paths", async (t)
   const sseSnap = JSON.parse(dataLine!.slice("data: ".length));
   assert.deepEqual(sseSnap, snap);
 });
+
+test("mid-stream client disconnect evicts the client and server keeps serving", async (t) => {
+  const fx = buildFixture();
+  t.after(() => fx.cleanup());
+
+  // gateway with flippable health so tests can drive transition broadcasts
+  let healthy = true;
+  const gw = http.createServer((req, res) => {
+    if (req.url === "/health") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: healthy, status: healthy ? "live" : "down" }));
+      return;
+    }
+    res.writeHead(404).end();
+  });
+  // fixture roster points agents at GW_PORT (first test's gateway is closed by now)
+  await new Promise<void>((ok) => gw.listen(GW_PORT, "127.0.0.1", () => ok()));
+
+  const srv = startServer({
+    port: SERVER_PORT,
+    agentsPath: fx.agentsPath,
+    hermesPath: fx.hermesPath,
+    uiDir: fx.uiDir,
+    pollIntervalMs: 100,
+  });
+  t.after(() => {
+    srv.stop();
+    gw.close();
+  });
+  await srv.ready;
+
+  // SSE client #1: read the first snapshot frame, then destroy the socket mid-stream
+  await new Promise<void>((resolve, reject) => {
+    const req = http.get({ host: "127.0.0.1", port: SERVER_PORT, path: "/api/stream" }, (res) => {
+      let buf = "";
+      res.on("data", (c) => {
+        buf += c;
+        if (buf.includes("\n\n")) {
+          res.destroy();
+          resolve();
+        }
+      });
+      res.on("error", () => {});
+    });
+    req.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "ECONNRESET") return; // expected from res.destroy()
+      reject(err);
+    });
+  });
+
+  // drive real broadcasts while the dead client is (recently) gone: flip the
+  // gateway health down then up — each flip fires an onTransition broadcast
+  async function waitHealth(expected: boolean) {
+    for (let i = 0; i < 50; i++) {
+      const res = await get(SERVER_PORT, "/api/snapshot");
+      const parsed = JSON.parse(res.body);
+      if (parsed.health.ada && parsed.health.ada.ok === expected) return;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    assert.ok(false, `agent health never became ${expected}`);
+  }
+  healthy = false;
+  await waitHealth(false);
+  healthy = true;
+  await waitHealth(true);
+
+  // server must still be alive and serving: a second SSE connect gets a fresh
+  // snapshot frame (proves the dead client was evicted, not poisoning writes)
+  const frame = await new Promise<string>((resolve, reject) => {
+    const req = http.get({ host: "127.0.0.1", port: SERVER_PORT, path: "/api/stream" }, (res) => {
+      let buf = "";
+      res.on("data", (c) => {
+        buf += c;
+        if (buf.includes("\n\n")) {
+          req.destroy();
+          resolve(buf.slice(0, buf.indexOf("\n\n") + 1));
+        }
+      });
+      res.on("error", () => {});
+    });
+    req.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "ECONNRESET") return;
+      reject(err);
+    });
+  });
+  assert.match(frame, /^event: snapshot\ndata: /);
+  const line2 = frame.split("\n").find((l) => l.startsWith("data: "));
+  assert.ok(line2, "second connect missing data line");
+  const snap2 = JSON.parse(line2!.slice("data: ".length));
+  assert.equal(snap2.roster.openclaw[0].name, "ada");
+  assert.equal(snap2.health.ada.ok, true, "second snapshot was stale, not a fresh read");
+});
