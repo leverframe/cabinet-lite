@@ -28,7 +28,8 @@
       .clock .t { color:#FFFFFF; font-size:16px; font-weight:700; letter-spacing:2px; }
       .clock .d { color:#5A5F64; font-size:9px; letter-spacing:1px; }
       .live-dot { color:#00C853; font-size:10px; animation:pulse 1.1s steps(2) infinite; }
-      .attention { display:flex; align-items:center; gap:10px; padding:12px 20px; background:#171310; border-bottom:1px solid #3A2E10; flex-wrap:wrap; }
+      .attention { display:flex; align-items:center; gap:10px; padding:12px 20px; background:#171310; border-bottom:1px solid #3A2E10; flex-wrap:wrap; max-height:92px; overflow:hidden; } /* belt-and-braces: banner never grows past ~2 rows even if chips leak */
+      .att-more { color:#5A5F64; }
       .attention.clear { background:#101211; border-bottom:1px solid #1F1F1F; }
       .attention.off { background:#101112; border-bottom:1px solid #1F1F1F; }
       .att-label { color:#FFB000; letter-spacing:3px; font-size:10px; font-weight:700; flex:none; }

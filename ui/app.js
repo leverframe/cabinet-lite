@@ -76,15 +76,21 @@
     var plate = snap.plates && snap.plates.needs_you;
     if (!plate) return;
     if (plate.ok && Array.isArray(plate.tasks) && plate.tasks.length > 0) {
+      var MAX_CHIPS = 6;
+      var total = plate.tasks.length;
       var chips = plate.tasks
+        .slice(0, MAX_CHIPS)
         .map(function (t) {
           return '<span class="att-item"><b>' + esc(t.assigned_to) + "</b> <span class=\"sp-dim\">" + esc(t.title) + "</span></span>";
         })
         .join("");
+      if (total > MAX_CHIPS) {
+        chips += '<span class="att-item att-more">+' + (total - MAX_CHIPS) + " more</span>";
+      }
       el.className = "attention";
       el.innerHTML =
         '<span class="att-label">NEEDS YOU</span>' + chips +
-        '<span class="att-cta">' + plate.tasks.length + " ITEMS →</span>";
+        '<span class="att-cta">' + total + " ITEMS →</span>";
     } else if (plate.ok) {
       el.className = "attention clear";
       el.innerHTML =
