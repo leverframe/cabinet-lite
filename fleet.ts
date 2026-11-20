@@ -75,9 +75,6 @@ export function loadRosters(agentsPath?: string, hermesPath?: string, genericPat
         generic: generic.map(({ token: _t, ...rest }) => rest),
       };
     },
-    distinctRuntimes() {
-      return distinctRuntimes({ openclaw, hermes, generic });
-    },
   };
 }
 

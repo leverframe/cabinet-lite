@@ -131,7 +131,8 @@
     var health = snap.health || {};
     var out = [];
     /* openclaw + generic are the HTTP-probed slices: health-driven dot.
-       mcp-labeled entries render static idle (no probe in v1). */
+       mcp-labeled entries ARE probed server-side; their health is just
+       not displayed, so they render static idle. */
     [].concat(roster.openclaw || [], roster.generic || []).forEach(function (a) {
       var label = entryLabel(a, false);
       if (label === "mcp") {

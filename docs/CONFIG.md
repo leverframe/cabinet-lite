@@ -89,7 +89,7 @@ data, not a code branch. Generic entries poll exactly like OpenClaw entries
       "role": "collector",
       "host": "userve1c",
       "port": 14317,
-      "healthPath": "/metrics"
+      "healthPath": "/api/status"
     }
   ]
 }
@@ -102,7 +102,7 @@ data, not a code branch. Generic entries poll exactly like OpenClaw entries
 | `model` | no | model the agent runs |
 | `host` | yes | hostname reachable from the box running cabinet-lite |
 | `port` | yes | port on the host |
-| `healthPath` | yes (in practice) | probe path — omitting it polls `/health` |
+| `healthPath` | yes (in practice) | probe path — omitting it polls `/health`. Must return JSON (e.g. `{"ok":true}`) — text endpoints (Prometheus `/metrics`) will render the tile down |
 | `runtime` | no | display label; defaults to `openclaw` |
 | `token` | no | optional gateway token (never leaves the box) |
 
