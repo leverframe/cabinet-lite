@@ -81,7 +81,8 @@
       var chips = plate.tasks
         .slice(0, MAX_CHIPS)
         .map(function (t) {
-          return '<span class="att-item"><b>' + esc(t.assigned_to) + "</b> <span class=\"sp-dim\">" + esc(t.title) + "</span></span>";
+          var who = t.assigned_to || "unassigned";
+          return '<span class="att-item"><b>' + esc(who) + "</b> <span class=\"sp-dim\">" + esc(t.title) + "</span></span>";
         })
         .join("");
       if (total > MAX_CHIPS) {
@@ -185,7 +186,7 @@
           '</span><span class="fi-agent">' + esc(e.agent) +
           '</span><span class="fi-badge ' + badge[0] + '">' + badge[1] + "</span>" +
           '<span class="fi-prompt">' + esc(e.summary) + "</span>" +
-          '<span class="fi-ms">' + fmtMs(e.ms) + "</span>" +
+          '<span class="fi-ms">' + (e.ms === 0 ? "—" : fmtMs(e.ms)) + "</span>" +
           (err ? '<span class="fi-link">context →</span>' : "") +
           "</div>"
         );
