@@ -7,6 +7,11 @@ export function startMockGateway(port: number): Promise<http.Server> {
       res.end(JSON.stringify({ ok: true, status: "live" }));
       return;
     }
+    if (req.url === "/status") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true, status: "live", via: "status" }));
+      return;
+    }
     if (req.url === "/v1/chat/completions" && req.method === "POST") {
       const auth = req.headers.authorization ?? "";
       res.writeHead(200, {

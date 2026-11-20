@@ -71,6 +71,17 @@
 
   var BADGE = { openclaw: ["b-oc", "OPENCLAW"], hermes: ["b-he", "HERMES"], mcp: ["b-mcp", "MCP"] };
 
+  /* runtime is data: known labels keep their styled badge, anything else gets
+     the generic steel badge with the label UPPERCASED */
+  function badgeFor(label) {
+    return BADGE[label] || ["b-x", String(label).toUpperCase()];
+  }
+
+  /* roster entries carry their own label server-side; slices fall back by kind */
+  function entryLabel(a, isHermes) {
+    return a.runtime || (isHermes ? "hermes" : "openclaw");
+  }
+
   function renderAttention(snap, counts) {
     var el = document.getElementById("attention");
     var plate = snap.plates && snap.plates.needs_you;
@@ -104,29 +115,37 @@
     }
   }
 
+  function tileHtml(a, label, state) {
+    var slot = state === "live" ? '<i></i>' : '<i class="dark"></i>';
+    return (
+      '<div class="tile' + (state === "down" ? " down" : "") + '"><span class="st ' + state + '"></span>' +
+      '<div class="tile-name">' + esc(a.name) + '</div><div class="tile-role">' + esc(a.role) + "</div>" +
+      '<div class="slot">' + slot + '<span class="ball"></span></div><span class="tile-tag">' +
+      esc(label.slice(0, 2).toLowerCase()) + "</span></div>"
+    );
+  }
+
   function renderTiles(snap) {
     var el = document.getElementById("tiles");
-    var roster = snap.roster || { openclaw: [], hermes: [] };
+    var roster = snap.roster || { openclaw: [], hermes: [], generic: [] };
     var health = snap.health || {};
     var out = [];
-    (roster.openclaw || []).forEach(function (a) {
+    /* openclaw + generic are the HTTP-probed slices: health-driven dot.
+       mcp-labeled entries render static idle (no probe in v1). */
+    [].concat(roster.openclaw || [], roster.generic || []).forEach(function (a) {
+      var label = entryLabel(a, false);
+      if (label === "mcp") {
+        out.push(tileHtml(a, label, "idle"));
+        return;
+      }
       var h = health[a.name];
       var state = "idle";
       if (h && h.error) state = "down";
       else if (h && !h.error && h.ok) state = "live";
-      var slot = state === "live" ? '<i></i>' : '<i class="dark"></i>';
-      out.push(
-        '<div class="tile' + (state === "down" ? " down" : "") + '"><span class="st ' + state + '"></span>' +
-        '<div class="tile-name">' + esc(a.name) + '</div><div class="tile-role">' + esc(a.role) + "</div>" +
-        '<div class="slot">' + slot + '<span class="ball"></span></div><span class="tile-tag">oc</span></div>'
-      );
+      out.push(tileHtml(a, label, state));
     });
     (roster.hermes || []).forEach(function (h) {
-      out.push(
-        '<div class="tile"><span class="st idle"></span>' +
-        '<div class="tile-name">' + esc(h.name) + '</div><div class="tile-role">' + esc(h.role) + "</div>" +
-        '<div class="slot"><i class="dark"></i><span class="ball"></span></div><span class="tile-tag">he</span></div>'
-      );
+      out.push(tileHtml(h, entryLabel(h, true), "idle"));
     });
     el.innerHTML = out.join("") ||
       '<div class="fi-empty" style="grid-column:1/-1">no levers in the frame — roster empty.</div>';
@@ -179,7 +198,7 @@
     }
     el.innerHTML = feed
       .map(function (e) {
-        var badge = BADGE[e.runtime] || BADGE.mcp;
+        var badge = badgeFor(e.runtime);
         var err = !e.ok;
         return (
           '<div class="fi' + (err ? " fi-err" : "") + '"><span class="fi-time">' + esc(etTime(new Date(e.ts))) +
@@ -222,14 +241,40 @@
     document.getElementById("pulls-fail").textContent = String(
       feed.filter(function (e) { return !e.ok; }).length
     );
-    var roster = (snap.roster || { openclaw: [], hermes: [] });
-    document.getElementById("rt-oc").textContent = String((roster.openclaw || []).length);
-    document.getElementById("rt-he").textContent = String((roster.hermes || []).length);
+    renderRuntimes(snap, feed);
+  }
+
+  /* RUNTIMES side-rail: distinct runtime labels across the whole roster
+     (openclaw + generic + hermes) plus the static mcp count, rendered
+     dynamically — max 6 rows, then a "+N more" line. */
+  function renderRuntimes(snap, feed) {
+    var el = document.getElementById("rt-rows");
+    var roster = (snap.roster || { openclaw: [], hermes: [], generic: [] });
+    var counts = {};
+    [].concat(roster.openclaw || [], roster.generic || []).forEach(function (a) {
+      var label = entryLabel(a, false);
+      counts[label] = (counts[label] || 0) + 1;
+    });
+    (roster.hermes || []).forEach(function (h) {
+      var label = entryLabel(h, true);
+      counts[label] = (counts[label] || 0) + 1;
+    });
     var mcpAgents = {};
     feed.forEach(function (e) {
       if (e.runtime === "mcp") mcpAgents[e.agent] = 1;
     });
-    document.getElementById("rt-mcp").textContent = String(Object.keys(mcpAgents).length);
+    if (mcpAgents && Object.keys(mcpAgents).length) {
+      counts.mcp = (counts.mcp || 0) + Object.keys(mcpAgents).length;
+    }
+    var labels = Object.keys(counts).sort();
+    var MAX_ROWS = 6;
+    var rows = labels.slice(0, MAX_ROWS).map(function (label) {
+      return '<div class="kv"><span>' + esc(label) + "</span><b>" + counts[label] + "</b></div>";
+    });
+    if (labels.length > MAX_ROWS) {
+      rows.push('<div class="kv"><span class="sp-dim">+' + (labels.length - MAX_ROWS) + " more</span></div>");
+    }
+    el.innerHTML = rows.join("") || '<div class="kv"><span class="sp-dim">no runtimes</span></div>';
   }
 
   function renderTopDigest(feed) {
@@ -249,20 +294,21 @@
   }
 
   function computeCounts(snap) {
-    var roster = snap.roster || { openclaw: [], hermes: [] };
+    var roster = snap.roster || { openclaw: [], hermes: [], generic: [] };
     var health = snap.health || {};
-    var healthyOc = (roster.openclaw || []).filter(function (a) {
+    var probed = [].concat(roster.openclaw || [], roster.generic || []);
+    var healthyProbed = probed.filter(function (a) {
       var h = health[a.name];
       return h && !h.error && h.ok;
     }).length;
     var heCount = (roster.hermes || []).length;
-    var downCount = (roster.openclaw || []).filter(function (a) {
+    var downCount = probed.filter(function (a) {
       var h = health[a.name];
       return h && h.error;
     }).length;
     return {
-      healthyRoutes: healthyOc + heCount,
-      totalRoutes: (roster.openclaw || []).length + heCount,
+      healthyRoutes: healthyProbed + heCount,
+      totalRoutes: probed.length + heCount,
       leversFree: downCount,
     };
   }

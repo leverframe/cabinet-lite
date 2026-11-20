@@ -14,6 +14,7 @@ export interface ServerOptions {
   port?: number;
   agentsPath?: string;
   hermesPath?: string;
+  genericPath?: string;
   cabinetUrl?: string;
   fleetHealthUrl?: string;
   uiDir?: string;
@@ -33,6 +34,7 @@ export function startServer(opts: ServerOptions = {}) {
   const port = opts.port ?? Number(process.env.PORT ?? DEFAULT_PORT);
   const agentsPath = opts.agentsPath ?? process.env.FLEET_BRIDGE_AGENTS;
   const hermesPath = opts.hermesPath ?? process.env.FLEET_BRIDGE_HERMES;
+  const genericPath = opts.genericPath ?? process.env.FLEET_BRIDGE_GENERIC;
   // Plate backends are env-configured (set CABINET_URL / FLEET_HEALTH_URL in
   // deployment); unset URLs degrade those plates to a "not configured" error.
   const cabinetUrl = opts.cabinetUrl ?? process.env.CABINET_URL ?? "";
@@ -46,6 +48,7 @@ export function startServer(opts: ServerOptions = {}) {
   const feed = new Feed();
   const fleet = createFleet(agentsPath, hermesPath, {
     pollIntervalMs: opts.pollIntervalMs,
+    genericPath,
   });
 
   let cabinetPlate: CabinetPlate = { kind: "needs_you", ok: false, error: "not polled yet" };
@@ -81,7 +84,7 @@ export function startServer(opts: ServerOptions = {}) {
   fleet.onTransition((t) => {
     const ok = !("error" in t.to) && t.to.ok;
     feed.add({
-      runtime: "openclaw",
+      runtime: t.runtime,
       agent: t.name,
       summary: ok ? "health recovered" : "health degraded: " + ("error" in t.to ? t.to.error : ""),
       ms: 0,

@@ -1,8 +1,7 @@
-export type Runtime = "openclaw" | "hermes" | "mcp";
-
 export interface FeedEntry {
   ts: number;
-  runtime: Runtime;
+  /** runtime label — openclaw/hermes/mcp today, any roster label in general */
+  runtime: string;
   agent: string;
   summary: string;
   ms: number;
