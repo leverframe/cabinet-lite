@@ -27,6 +27,7 @@ async function getJson(base: string, path: string, timeoutMs: number): Promise<u
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const res = await fetch(new URL(path, base), { signal: ctl.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } finally {
     clearTimeout(timer);

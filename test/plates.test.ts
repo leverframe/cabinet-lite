@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
+import net from "node:net";
 import { fetchCabinetTasks, fetchFleetHealth } from "../plates.js";
 
 async function serve(
@@ -59,6 +60,21 @@ test("plates degrade on unreachable backend, never throw", async () => {
   const q = await fetchCabinetTasks("http://127.0.0.1:1", 300);
   assert.equal(q.ok, false);
   assert.equal((q as any).kind, "needs_you");
+});
+
+test("plates abort via AbortController when server accepts but never responds", async (t) => {
+  // Accepts connections but never writes a response -> exercises the abort
+  // path, not connection-refused (mirrors test/fleet.test.ts pattern).
+  const srv = net.createServer(() => {});
+  await new Promise<void>((ok) => srv.listen(18994, "127.0.0.1", () => ok()));
+  t.after(() => srv.close());
+  const started = Date.now();
+  const p = await fetchCabinetTasks("http://127.0.0.1:18994", 300);
+  const elapsed = Date.now() - started;
+  assert.equal(p.ok, false);
+  assert.equal(typeof (p as any).error, "string");
+  assert.ok(elapsed >= 250, `expected abort at ~300ms, resolved after ${elapsed}ms`);
+  assert.ok(elapsed < 5000, `abort must not fall back to the 5s default, took ${elapsed}ms`);
 });
 
 test("plates degrade on non-JSON response", async (t) => {
