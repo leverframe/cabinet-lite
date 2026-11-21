@@ -58,7 +58,14 @@ touch it.
 
 ## Screenshots
 
-<!-- screenshots land in Task 7 -->
+![dashboard — live fleet view](docs/screenshots/dashboard.png)
+*dashboard — the full signal box: needs-you plate, lever tiles, pull rhythm, feed, and interlock panel (live fleet)*
+
+![needs you — banner emphasis](docs/screenshots/needs-you.png)
+*needs-you — the attention banner up top when the cabinet queue has open items*
+
+![zero state — empty cabinet queue (mock backend)](docs/screenshots/zero-state.png)
+*zero state — empty cabinet queue (mock backend)*
 
 ## Configuration
 
