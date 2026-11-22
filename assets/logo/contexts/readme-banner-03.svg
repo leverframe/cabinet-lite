@@ -1,4 +1,4 @@
-<svg viewBox="0 0 128 128" width="160" height="160" role="img" aria-label="cabinet-lite logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="160" height="160" role="img" aria-label="cabinet-lite logo">
 <rect width="128" height="128" fill="#FFB000"></rect>
 <rect x="26" y="18" width="76" height="92" rx="3" fill="#141515"></rect>
 <rect x="35" y="27" width="58" height="35" fill="#C2C7CC"></rect><rect x="35" y="70" width="58" height="31" fill="#C2C7CC"></rect>
