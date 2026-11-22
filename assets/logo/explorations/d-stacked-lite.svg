@@ -1,6 +1,6 @@
-<svg viewBox="0 0 128 128" width="240" height="240" role="img" aria-label="Option D">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="240" height="240" role="img" aria-label="Option D">
 <rect width="128" height="128" fill="#FFB000"></rect>
 <rect x="28" y="22" width="72" height="22" fill="#141515"></rect><rect x="28" y="53" width="72" height="22" fill="#141515"></rect><rect x="28" y="84" width="72" height="22" fill="#141515"></rect>
 <rect x="34" y="27" width="60" height="12" fill="#C2C7CC"></rect><rect x="34" y="58" width="60" height="12" fill="#C2C7CC"></rect><rect x="34" y="89" width="60" height="12" fill="#C2C7CC"></rect>
-<circle cx="84" cy="33" r="4" fill="{{signal}}"></circle>
+<circle cx="84" cy="33" r="4" fill="#2FD08A"></circle>
 </svg>
