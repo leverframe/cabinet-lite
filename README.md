@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/bite.svg" alt="Leverframe bite mark" width="96" />
+<img src="assets/logo/cabinet-mark.svg" alt="cabinet-lite mark" width="128" />
 
 # `cabinet-lite`
 
@@ -9,6 +9,8 @@ the leverframe signal box — a cross-runtime fleet dashboard for OpenClaw, Herm
 [![CI](https://img.shields.io/github/actions/workflow/status/leverframe/cabinet-lite/ci.yml?branch=main&style=flat-square&label=CI&labelColor=111213&color=FFB000)](https://github.com/leverframe/cabinet-lite/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-FFB000?style=flat-square&labelColor=111213)](LICENSE)
 ![read-only v1](https://img.shields.io/badge/read--only-v1-111213?style=flat-square&labelColor=111213)
+
+<img src="assets/logo/drawer-wall.svg" alt="cabinet-lite drawer wall" width="640" />
 
 </div>
 

@@ -1,0 +1,8 @@
+<svg viewBox="0 0 128 128" width="240" height="240" role="img" aria-label="Option C">
+<rect width="128" height="128" fill="#FFB000"></rect>
+<rect x="26" y="18" width="76" height="92" fill="none" stroke="#141515" stroke-width="9"></rect>
+<line x1="26" y1="64" x2="102" y2="64" stroke="#141515" stroke-width="7"></line>
+<line x1="50" y1="100" x2="80" y2="36" stroke="#141515" stroke-width="17" stroke-linecap="round"></line>
+<line x1="50" y1="100" x2="80" y2="36" stroke="#C2C7CC" stroke-width="7" stroke-linecap="round"></line>
+<circle cx="80" cy="36" r="7.5" fill="{{signal}}" stroke="#141515" stroke-width="4"></circle>
+</svg>

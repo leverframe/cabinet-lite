@@ -1,0 +1,7 @@
+<svg viewBox="0 0 128 128" width="240" height="240" role="img" aria-label="Option A">
+<rect width="128" height="128" fill="#FFB000"></rect>
+<rect x="26" y="18" width="76" height="92" rx="3" fill="#141515"></rect>
+<rect x="35" y="27" width="58" height="35" fill="#C2C7CC"></rect><rect x="35" y="70" width="58" height="31" fill="#C2C7CC"></rect>
+<rect x="53" y="41" width="22" height="7" rx="3.5" fill="#141515"></rect><rect x="53" y="82" width="22" height="7" rx="3.5" fill="#141515"></rect>
+<circle cx="83" cy="36" r="4.5" fill="{{signal}}"></circle>
+</svg>
