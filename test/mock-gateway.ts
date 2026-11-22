@@ -1,7 +1,25 @@
 import http from "node:http";
+import type { AddressInfo } from "node:net";
 
 export function startMockGateway(port: number): Promise<http.Server> {
-  const srv = http.createServer((req, res) => {
+  const srv = makeMockGateway();
+  return new Promise((ok) => srv.listen(port, "127.0.0.1", () => ok(srv)));
+}
+
+export function startMockGatewayEphemeral(): Promise<{
+  srv: http.Server;
+  port: number;
+}> {
+  const srv = makeMockGateway();
+  return new Promise((ok) =>
+    srv.listen(0, "127.0.0.1", () =>
+      ok({ srv, port: (srv.address() as AddressInfo).port }),
+    ),
+  );
+}
+
+function makeMockGateway(): http.Server {
+  return http.createServer((req, res) => {
     if (req.url === "/health") {
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify({ ok: true, status: "live" }));
@@ -32,5 +50,4 @@ export function startMockGateway(port: number): Promise<http.Server> {
     }
     res.writeHead(404).end();
   });
-  return new Promise((ok) => srv.listen(port, "127.0.0.1", () => ok(srv)));
 }
