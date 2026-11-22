@@ -2,9 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import net from "node:net";
+import type { AddressInfo } from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { startMockGateway } from "./mock-gateway.js";
+import { startMockGatewayEphemeral } from "./mock-gateway.js";
 import { loadRosters, agentHealth, createFleet, runtimeLabel, distinctRuntimes } from "../fleet.js";
 
 function tmpRoster(files: Record<string, unknown>): string {
@@ -64,9 +65,9 @@ test("loadRosters degrades to empty when JSON parses but shape is wrong", () => 
 });
 
 test("agentHealth hits /health and returns json", async (t) => {
-  const srv = await startMockGateway(18991);
+  const { srv, port } = await startMockGatewayEphemeral();
   t.after(() => srv.close());
-  const h = await agentHealth({ host: "127.0.0.1", port: 18991, timeoutMs: 1000 });
+  const h = await agentHealth({ host: "127.0.0.1", port, timeoutMs: 1000 });
   assert.deepEqual(h, { ok: true, status: "live" });
 });
 
@@ -74,11 +75,12 @@ test("agentHealth aborts via AbortController when server accepts but never respo
   // Accepts connections but never writes a response -> exercises the abort
   // path, not connection-refused.
   const srv = net.createServer(() => {});
-  await new Promise<void>((ok) => srv.listen(18992, "127.0.0.1", () => ok()));
+  await new Promise<void>((ok) => srv.listen(0, "127.0.0.1", () => ok()));
+  const port = (srv.address() as AddressInfo).port;
   t.after(() => srv.close());
   const started = Date.now();
   await assert.rejects(
-    agentHealth({ host: "127.0.0.1", port: 18992, timeoutMs: 300 }),
+    agentHealth({ host: "127.0.0.1", port, timeoutMs: 300 }),
   );
   const elapsed = Date.now() - started;
   assert.ok(elapsed >= 250, `expected abort at ~300ms, rejected after ${elapsed}ms`);
@@ -86,10 +88,11 @@ test("agentHealth aborts via AbortController when server accepts but never respo
 });
 
 test("createFleet seeds cache, fires on up-down transition, hermes stays static", async (t) => {
+  const { srv, port } = await startMockGatewayEphemeral();
   const dir = tmpRoster({
     "agents.json": {
       agents: [
-        { name: "ada", role: "ops", tier: "worker", port: 18993, host: "127.0.0.1", token: "t" },
+        { name: "ada", role: "ops", tier: "worker", port, host: "127.0.0.1", token: "t" },
       ],
     },
     "hermes.json": {
@@ -98,7 +101,6 @@ test("createFleet seeds cache, fires on up-down transition, hermes stays static"
       ],
     },
   });
-  const srv = await startMockGateway(18993);
   const fleet = createFleet(path.join(dir, "agents.json"), path.join(dir, "hermes.json"), {
     pollIntervalMs: 300,
   });
@@ -157,24 +159,24 @@ test("generic roster loads via third path, strips optional token, snapshot key p
 });
 
 test("generic entry healthPath is used instead of /health", async (t) => {
-  const srv = await startMockGateway(18994);
+  const { srv, port } = await startMockGatewayEphemeral();
   t.after(() => srv.close());
-  const viaStatus = await agentHealth({ host: "127.0.0.1", port: 18994, healthPath: "/status", timeoutMs: 1000 });
+  const viaStatus = await agentHealth({ host: "127.0.0.1", port, healthPath: "/status", timeoutMs: 1000 });
   assert.deepEqual(viaStatus, { ok: true, status: "live", via: "status" });
   // default stays /health for openclaw-style entries
-  const viaDefault = await agentHealth({ host: "127.0.0.1", port: 18994, timeoutMs: 1000 });
+  const viaDefault = await agentHealth({ host: "127.0.0.1", port, timeoutMs: 1000 });
   assert.deepEqual(viaDefault, { ok: true, status: "live" });
 });
 
 test("createFleet polls generic entries through the same health pipeline", async (t) => {
+  const { srv, port } = await startMockGatewayEphemeral();
   const dir = tmpRoster({
     "generic.json": {
       agents: [
-        { name: "khoj", role: "search", port: 18995, host: "127.0.0.1", runtime: "khoj", healthPath: "/status" },
+        { name: "khoj", role: "search", port, host: "127.0.0.1", runtime: "khoj", healthPath: "/status" },
       ],
     },
   });
-  const srv = await startMockGateway(18995);
   const fleet = createFleet(undefined, undefined, {
     genericPath: path.join(dir, "generic.json"),
     pollIntervalMs: 300,
