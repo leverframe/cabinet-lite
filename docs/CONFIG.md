@@ -27,17 +27,17 @@ The roster files use the same shape as
 }
 ```
 
-| Field | Required | Meaning |
-|---|---|---|
-| `name` | yes | agent name — key for health lookups and feed entries |
-| `role` | yes | one-line role, shown on the lever tile |
-| `tier` | no | fleet tier (e.g. `worker`) |
-| `model` | no | model the agent runs |
-| `port` | yes | gateway port on the host — polled at `http://{host}:{port}{healthPath}` |
-| `host` | yes | hostname reachable from the box running cabinet-lite |
-| `token` | yes | gateway token — used only server-side if invoke lands in v2 |
-| `runtime` | no | display label; defaults to `openclaw` |
-| `healthPath` | no | HTTP probe path; defaults to `/health` |
+| Field        | Required | Meaning                                                                 |
+| ------------ | -------- | ----------------------------------------------------------------------- |
+| `name`       | yes      | agent name — key for health lookups and feed entries                    |
+| `role`       | yes      | one-line role, shown on the lever tile                                  |
+| `tier`       | no       | fleet tier (e.g. `worker`)                                              |
+| `model`      | no       | model the agent runs                                                    |
+| `port`       | yes      | gateway port on the host — polled at `http://{host}:{port}{healthPath}` |
+| `host`       | yes      | hostname reachable from the box running cabinet-lite                    |
+| `token`      | yes      | gateway token — used only server-side if invoke lands in v2             |
+| `runtime`    | no       | display label; defaults to `openclaw`                                   |
+| `healthPath` | no       | HTTP probe path; defaults to `/health`                                  |
 
 ### Hermes roster (`FLEET_BRIDGE_HERMES`)
 
@@ -56,15 +56,15 @@ The roster files use the same shape as
 }
 ```
 
-| Field | Required | Meaning |
-|---|---|---|
-| `name` | yes | agent name |
-| `role` | yes | one-line role, shown on the lever tile |
-| `model` | no | model the agent runs |
-| `host` | yes | host the agent lives on |
-| `ssh_user` | yes | SSH user for Hermes invocations (v2) |
-| `binary` | yes | Hermes binary path/name on the host (v2) |
-| `runtime` | no | display label; defaults to `hermes` |
+| Field      | Required | Meaning                                  |
+| ---------- | -------- | ---------------------------------------- |
+| `name`     | yes      | agent name                               |
+| `role`     | yes      | one-line role, shown on the lever tile   |
+| `model`    | no       | model the agent runs                     |
+| `host`     | yes      | host the agent lives on                  |
+| `ssh_user` | yes      | SSH user for Hermes invocations (v2)     |
+| `binary`   | yes      | Hermes binary path/name on the host (v2) |
+| `runtime`  | no       | display label; defaults to `hermes`      |
 
 ### Generic runtime roster (`FLEET_BRIDGE_GENERIC`)
 
@@ -95,16 +95,16 @@ data, not a code branch. Generic entries poll exactly like OpenClaw entries
 }
 ```
 
-| Field | Required | Meaning |
-|---|---|---|
-| `name` | yes | agent name |
-| `role` | yes | one-line role, shown on the lever tile |
-| `model` | no | model the agent runs |
-| `host` | yes | hostname reachable from the box running cabinet-lite |
-| `port` | yes | port on the host |
+| Field        | Required          | Meaning                                                                                                                                            |
+| ------------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`       | yes               | agent name                                                                                                                                         |
+| `role`       | yes               | one-line role, shown on the lever tile                                                                                                             |
+| `model`      | no                | model the agent runs                                                                                                                               |
+| `host`       | yes               | hostname reachable from the box running cabinet-lite                                                                                               |
+| `port`       | yes               | port on the host                                                                                                                                   |
 | `healthPath` | yes (in practice) | probe path — omitting it polls `/health`. Must return JSON (e.g. `{"ok":true}`) — text endpoints (Prometheus `/metrics`) will render the tile down |
-| `runtime` | no | display label; defaults to `openclaw` |
-| `token` | no | optional gateway token (never leaves the box) |
+| `runtime`    | no                | display label; defaults to `openclaw`                                                                                                              |
+| `token`      | no                | optional gateway token (never leaves the box)                                                                                                      |
 
 Roster entries without `runtime` default by file: OpenClaw/generic lines to
 `openclaw`, Hermes lines to `hermes`. The UI badge map knows
@@ -123,10 +123,10 @@ browser, and tokens never leave the box.
 
 Plates are bolted-in instruments in the sidebar/header. v1 ships two:
 
-| Plate | Backend | Source |
-|---|---|---|
-| `needs_you` | Cabinet | `GET {CABINET_URL}/api/tasks?state=active` |
-| `fleet_health` | fleet-health aggregate | `GET {FLEET_HEALTH_URL}/fleet-health` |
+| Plate          | Backend                | Source                                     |
+| -------------- | ---------------------- | ------------------------------------------ |
+| `needs_you`    | Cabinet                | `GET {CABINET_URL}/api/tasks?state=active` |
+| `fleet_health` | fleet-health aggregate | `GET {FLEET_HEALTH_URL}/fleet-health`      |
 
 **Degrade behavior:** an unset URL, an unreachable backend, a timeout, or an
 unexpected response shape degrades that plate to an error state — the UI
@@ -136,11 +136,11 @@ recovers on the next poll.
 
 ## Poll cadences
 
-| What | Cadence |
-|---|---|
-| Agent health polls (per OpenClaw + generic agent, 250ms stagger between agents, 5s timeout) | every 10s |
-| Plate backends (cabinet + fleet-health) | every 30s |
-| SSE snapshot broadcast | every 10s, plus immediately on health transitions |
+| What                                                                                        | Cadence                                           |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Agent health polls (per OpenClaw + generic agent, 250ms stagger between agents, 5s timeout) | every 10s                                         |
+| Plate backends (cabinet + fleet-health)                                                     | every 30s                                         |
+| SSE snapshot broadcast                                                                      | every 10s, plus immediately on health transitions |
 
 ## Feed semantics
 

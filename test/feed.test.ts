@@ -20,6 +20,13 @@ test("add stamps ts and all returns a copy", () => {
   const all = f.all();
   assert.equal(all.length, 1);
   assert.equal(typeof all[0].ts, "number");
-  all.push({ ts: 0, runtime: "mcp", agent: "ghost", summary: "", ms: 0, ok: false });
+  all.push({
+    ts: 0,
+    runtime: "mcp",
+    agent: "ghost",
+    summary: "",
+    ms: 0,
+    ok: false,
+  });
   assert.equal(f.all().length, 1);
 });

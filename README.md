@@ -10,7 +10,6 @@
 
 the leverframe signal box — a cross-runtime fleet dashboard for OpenClaw, Hermes, and MCP
 
-
 <img src="assets/logo/drawer-wall.svg" alt="cabinet-lite drawer wall" width="640" />
 
 </div>
@@ -34,13 +33,13 @@ Prerequisites:
 - Two roster files, same shape as [fleet-bridge](https://github.com/leverframe/fleet-bridge)'s
   `agents.json` / `hermes-agents.json` (see [docs/CONFIG.md](docs/CONFIG.md))
 
-| Var | Default | Meaning |
-|---|---|---|
-| `FLEET_BRIDGE_AGENTS` | (required) | path to OpenClaw roster JSON |
-| `FLEET_BRIDGE_HERMES` | (required) | path to Hermes roster JSON |
-| `CABINET_URL` | (unset = plate degrades) | Cabinet base URL, read-only |
-| `FLEET_HEALTH_URL` | (unset = plate degrades) | fleet-health aggregate URL |
-| `PORT` | `9100` | listen port |
+| Var                   | Default                  | Meaning                      |
+| --------------------- | ------------------------ | ---------------------------- |
+| `FLEET_BRIDGE_AGENTS` | (required)               | path to OpenClaw roster JSON |
+| `FLEET_BRIDGE_HERMES` | (required)               | path to Hermes roster JSON   |
+| `CABINET_URL`         | (unset = plate degrades) | Cabinet base URL, read-only  |
+| `FLEET_HEALTH_URL`    | (unset = plate degrades) | fleet-health aggregate URL   |
+| `PORT`                | `9100`                   | listen port                  |
 
 ```bash
 npm ci && npm run build && npm start
@@ -62,13 +61,13 @@ touch it.
 ## Screenshots
 
 ![dashboard — live fleet view](docs/screenshots/dashboard.png)
-*dashboard — the full signal box: needs-you plate, lever tiles, pull rhythm, feed, and interlock panel (live fleet)*
+_dashboard — the full signal box: needs-you plate, lever tiles, pull rhythm, feed, and interlock panel (live fleet)_
 
 ![needs you — banner emphasis](docs/screenshots/needs-you.png)
-*needs-you — the attention banner up top when the cabinet queue has open items*
+_needs-you — the attention banner up top when the cabinet queue has open items_
 
 ![zero state — empty cabinet queue (mock backend)](docs/screenshots/zero-state.png)
-*zero state — empty cabinet queue (mock backend)*
+_zero state — empty cabinet queue (mock backend)_
 
 ## Configuration
 

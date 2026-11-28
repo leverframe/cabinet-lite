@@ -4,7 +4,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createFleet } from "./fleet.js";
 import { Feed } from "./feed.js";
-import { fetchCabinetTasks, fetchFleetHealth, type CabinetPlate, type FleetHealthPlate } from "./plates.js";
+import {
+  fetchCabinetTasks,
+  fetchFleetHealth,
+  type CabinetPlate,
+  type FleetHealthPlate,
+} from "./plates.js";
 
 const PLATE_INTERVAL_MS = 30_000;
 const STREAM_BROADCAST_MS = 10_000;
@@ -38,12 +43,17 @@ export function startServer(opts: ServerOptions = {}) {
   // Plate backends are env-configured (set CABINET_URL / FLEET_HEALTH_URL in
   // deployment); unset URLs degrade those plates to a "not configured" error.
   const cabinetUrl = opts.cabinetUrl ?? process.env.CABINET_URL ?? "";
-  const fleetHealthUrl = opts.fleetHealthUrl ?? process.env.FLEET_HEALTH_URL ?? "";
-  const uiDir = opts.uiDir ?? path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "ui");
+  const fleetHealthUrl =
+    opts.fleetHealthUrl ?? process.env.FLEET_HEALTH_URL ?? "";
+  const uiDir =
+    opts.uiDir ??
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "ui");
 
   const indexHtml = fs.readFileSync(path.join(uiDir, "index.html"), "utf8");
   const appJsPath = path.join(uiDir, "app.js");
-  const appJs = fs.existsSync(appJsPath) ? fs.readFileSync(appJsPath, "utf8") : undefined;
+  const appJs = fs.existsSync(appJsPath)
+    ? fs.readFileSync(appJsPath, "utf8")
+    : undefined;
 
   const feed = new Feed();
   const fleet = createFleet(agentsPath, hermesPath, {
@@ -51,8 +61,16 @@ export function startServer(opts: ServerOptions = {}) {
     genericPath,
   });
 
-  let cabinetPlate: CabinetPlate = { kind: "needs_you", ok: false, error: "not polled yet" };
-  let fleetHealthPlate: FleetHealthPlate = { kind: "fleet_health", ok: false, error: "not polled yet" };
+  let cabinetPlate: CabinetPlate = {
+    kind: "needs_you",
+    ok: false,
+    error: "not polled yet",
+  };
+  let fleetHealthPlate: FleetHealthPlate = {
+    kind: "fleet_health",
+    ok: false,
+    error: "not polled yet",
+  };
 
   const clients = new Set<http.ServerResponse>();
 
@@ -86,7 +104,9 @@ export function startServer(opts: ServerOptions = {}) {
     feed.add({
       runtime: t.runtime,
       agent: t.name,
-      summary: ok ? "health recovered" : "health degraded: " + ("error" in t.to ? t.to.error : ""),
+      summary: ok
+        ? "health recovered"
+        : "health degraded: " + ("error" in t.to ? t.to.error : ""),
       ms: 0,
       ok,
     });
@@ -101,10 +121,18 @@ export function startServer(opts: ServerOptions = {}) {
     const [c, h] = await Promise.all([
       cabinetUrl
         ? fetchCabinetTasks(cabinetUrl)
-        : Promise.resolve<CabinetPlate>({ kind: "needs_you", ok: false, error: "CABINET_URL not configured" }),
+        : Promise.resolve<CabinetPlate>({
+            kind: "needs_you",
+            ok: false,
+            error: "CABINET_URL not configured",
+          }),
       fleetHealthUrl
         ? fetchFleetHealth(fleetHealthUrl)
-        : Promise.resolve<FleetHealthPlate>({ kind: "fleet_health", ok: false, error: "FLEET_HEALTH_URL not configured" }),
+        : Promise.resolve<FleetHealthPlate>({
+            kind: "fleet_health",
+            ok: false,
+            error: "FLEET_HEALTH_URL not configured",
+          }),
     ]);
     cabinetPlate = c;
     fleetHealthPlate = h;

@@ -26,7 +26,14 @@ function buildFixture(): Fixture {
     path.join(rosterDir, "agents.json"),
     JSON.stringify({
       agents: [
-        { name: "ada", role: "ops", tier: "worker", port: GW_PORT, host: "127.0.0.1", token: "secret-openclaw-token" },
+        {
+          name: "ada",
+          role: "ops",
+          tier: "worker",
+          port: GW_PORT,
+          host: "127.0.0.1",
+          token: "secret-openclaw-token",
+        },
       ],
     }),
   );
@@ -34,7 +41,13 @@ function buildFixture(): Fixture {
     path.join(rosterDir, "hermes.json"),
     JSON.stringify({
       agents: [
-        { name: "miranda", role: "pm", host: "userve1c", ssh_user: "secret-ssh-user", binary: "/usr/local/bin/hermes" },
+        {
+          name: "miranda",
+          role: "pm",
+          host: "userve1c",
+          ssh_user: "secret-ssh-user",
+          binary: "/usr/local/bin/hermes",
+        },
       ],
     }),
   );
@@ -55,7 +68,10 @@ function buildFixture(): Fixture {
   };
 }
 
-function get(port: number, reqPath: string): Promise<{
+function get(
+  port: number,
+  reqPath: string,
+): Promise<{
   status: number | undefined;
   headers: http.IncomingHttpHeaders;
   body: string;
@@ -64,7 +80,9 @@ function get(port: number, reqPath: string): Promise<{
     const req = http.get({ host: "127.0.0.1", port, path: reqPath }, (res) => {
       let body = "";
       res.on("data", (c) => (body += c));
-      res.on("end", () => resolve({ status: res.statusCode, headers: res.headers, body }));
+      res.on("end", () =>
+        resolve({ status: res.statusCode, headers: res.headers, body }),
+      );
     });
     req.on("error", reject);
   });
@@ -78,15 +96,31 @@ test("server serves snapshot, ui, SSE stream, and 404s unknown paths", async (t)
   const cabinet = http.createServer((_req, res) => {
     res.end(
       JSON.stringify([
-        { id: 1, title: "rotation", assigned_to: "darlene", priority: 1, state: "active", claimed_by: "", created_at: 1, due_at: null, fail_count: 0 },
+        {
+          id: 1,
+          title: "rotation",
+          assigned_to: "darlene",
+          priority: 1,
+          state: "active",
+          claimed_by: "",
+          created_at: 1,
+          due_at: null,
+          fail_count: 0,
+        },
       ]),
     );
   });
-  await new Promise<void>((ok) => cabinet.listen(CABINET_PORT, "127.0.0.1", () => ok()));
+  await new Promise<void>((ok) =>
+    cabinet.listen(CABINET_PORT, "127.0.0.1", () => ok()),
+  );
   const fh = http.createServer((_req, res) => {
-    res.end(JSON.stringify({ healthy: 18, total: 20, threshold: 18, status: "ok" }));
+    res.end(
+      JSON.stringify({ healthy: 18, total: 20, threshold: 18, status: "ok" }),
+    );
   });
-  await new Promise<void>((ok) => fh.listen(HEALTH_PORT, "127.0.0.1", () => ok()));
+  await new Promise<void>((ok) =>
+    fh.listen(HEALTH_PORT, "127.0.0.1", () => ok()),
+  );
 
   const srv = startServer({
     port: SERVER_PORT,
@@ -110,21 +144,41 @@ test("server serves snapshot, ui, SSE stream, and 404s unknown paths", async (t)
     const res = await get(SERVER_PORT, "/api/snapshot");
     assert.equal(res.status, 200);
     const parsed = JSON.parse(res.body);
-    if (parsed.health.ada && parsed.plates.needs_you.ok && parsed.plates.fleet_health.ok) snap = parsed;
+    if (
+      parsed.health.ada &&
+      parsed.plates.needs_you.ok &&
+      parsed.plates.fleet_health.ok
+    )
+      snap = parsed;
     else await new Promise((r) => setTimeout(r, 100));
   }
-  assert.ok(snap, "snapshot never filled (fleet seed or plate cycle broke within 4s)");
+  assert.ok(
+    snap,
+    "snapshot never filled (fleet seed or plate cycle broke within 4s)",
+  );
   assert.deepEqual(snap.roster.openclaw, [
-    { name: "ada", role: "ops", tier: "worker", port: GW_PORT, host: "127.0.0.1" },
+    {
+      name: "ada",
+      role: "ops",
+      tier: "worker",
+      port: GW_PORT,
+      host: "127.0.0.1",
+    },
   ]);
   assert.deepEqual(snap.hermes, { miranda: "ssh" });
   assert.equal(snap.plates.needs_you.tasks[0].id, 1);
   assert.equal(snap.plates.fleet_health.healthy, 18);
   assert.ok(Array.isArray(snap.feed));
   const raw = JSON.stringify(snap);
-  assert.ok(!raw.includes("secret-openclaw-token"), "token leaked into snapshot");
+  assert.ok(
+    !raw.includes("secret-openclaw-token"),
+    "token leaked into snapshot",
+  );
   assert.ok(!raw.includes("secret-ssh-user"), "ssh_user leaked into snapshot");
-  assert.ok(!raw.includes("/usr/local/bin/hermes"), "binary path leaked into snapshot");
+  assert.ok(
+    !raw.includes("/usr/local/bin/hermes"),
+    "binary path leaked into snapshot",
+  );
 
   // perf bar: snapshot is cache-read only, must stay well under 50ms
   const perfStart = Date.now();
@@ -144,19 +198,25 @@ test("server serves snapshot, ui, SSE stream, and 404s unknown paths", async (t)
   assert.equal(missing.status, 404);
 
   // SSE stream: first event must be a full snapshot
-  const sse = await new Promise<{ headers: http.IncomingHttpHeaders; first: string }>((resolve, reject) => {
-    const req = http.get({ host: "127.0.0.1", port: SERVER_PORT, path: "/api/stream" }, (res) => {
-      let buf = "";
-      res.on("data", (c) => {
-        buf += c;
-        if (buf.includes("\n\n")) {
-          const first = buf.slice(0, buf.indexOf("\n\n") + 1);
-          req.destroy();
-          resolve({ headers: res.headers, first });
-        }
-      });
-      res.on("error", () => {});
-    });
+  const sse = await new Promise<{
+    headers: http.IncomingHttpHeaders;
+    first: string;
+  }>((resolve, reject) => {
+    const req = http.get(
+      { host: "127.0.0.1", port: SERVER_PORT, path: "/api/stream" },
+      (res) => {
+        let buf = "";
+        res.on("data", (c) => {
+          buf += c;
+          if (buf.includes("\n\n")) {
+            const first = buf.slice(0, buf.indexOf("\n\n") + 1);
+            req.destroy();
+            resolve({ headers: res.headers, first });
+          }
+        });
+        res.on("error", () => {});
+      },
+    );
     req.on("error", (err: NodeJS.ErrnoException) => {
       if (err.code === "ECONNRESET") return; // expected from req.destroy()
       reject(err);
@@ -164,7 +224,10 @@ test("server serves snapshot, ui, SSE stream, and 404s unknown paths", async (t)
   });
   assert.match(sse.headers["content-type"] ?? "", /text\/event-stream/);
   assert.match(sse.headers["cache-control"] ?? "", /no-cache/);
-  assert.ok(sse.first.startsWith("event: snapshot\n"), `first SSE event was not snapshot: ${JSON.stringify(sse.first)}`);
+  assert.ok(
+    sse.first.startsWith("event: snapshot\n"),
+    `first SSE event was not snapshot: ${JSON.stringify(sse.first)}`,
+  );
   const dataLine = sse.first.split("\n").find((l) => l.startsWith("data: "));
   assert.ok(dataLine, "snapshot event missing data line");
   const sseSnap = JSON.parse(dataLine!.slice("data: ".length));
@@ -180,7 +243,9 @@ test("mid-stream client disconnect evicts the client and server keeps serving", 
   const gw = http.createServer((req, res) => {
     if (req.url === "/health") {
       res.writeHead(200, { "content-type": "application/json" });
-      res.end(JSON.stringify({ ok: healthy, status: healthy ? "live" : "down" }));
+      res.end(
+        JSON.stringify({ ok: healthy, status: healthy ? "live" : "down" }),
+      );
       return;
     }
     res.writeHead(404).end();
@@ -203,17 +268,20 @@ test("mid-stream client disconnect evicts the client and server keeps serving", 
 
   // SSE client #1: read the first snapshot frame, then destroy the socket mid-stream
   await new Promise<void>((resolve, reject) => {
-    const req = http.get({ host: "127.0.0.1", port: SERVER_PORT, path: "/api/stream" }, (res) => {
-      let buf = "";
-      res.on("data", (c) => {
-        buf += c;
-        if (buf.includes("\n\n")) {
-          res.destroy();
-          resolve();
-        }
-      });
-      res.on("error", () => {});
-    });
+    const req = http.get(
+      { host: "127.0.0.1", port: SERVER_PORT, path: "/api/stream" },
+      (res) => {
+        let buf = "";
+        res.on("data", (c) => {
+          buf += c;
+          if (buf.includes("\n\n")) {
+            res.destroy();
+            resolve();
+          }
+        });
+        res.on("error", () => {});
+      },
+    );
     req.on("error", (err: NodeJS.ErrnoException) => {
       if (err.code === "ECONNRESET") return; // expected from res.destroy()
       reject(err);
@@ -239,17 +307,20 @@ test("mid-stream client disconnect evicts the client and server keeps serving", 
   // server must still be alive and serving: a second SSE connect gets a fresh
   // snapshot frame (proves the dead client was evicted, not poisoning writes)
   const frame = await new Promise<string>((resolve, reject) => {
-    const req = http.get({ host: "127.0.0.1", port: SERVER_PORT, path: "/api/stream" }, (res) => {
-      let buf = "";
-      res.on("data", (c) => {
-        buf += c;
-        if (buf.includes("\n\n")) {
-          req.destroy();
-          resolve(buf.slice(0, buf.indexOf("\n\n") + 1));
-        }
-      });
-      res.on("error", () => {});
-    });
+    const req = http.get(
+      { host: "127.0.0.1", port: SERVER_PORT, path: "/api/stream" },
+      (res) => {
+        let buf = "";
+        res.on("data", (c) => {
+          buf += c;
+          if (buf.includes("\n\n")) {
+            req.destroy();
+            resolve(buf.slice(0, buf.indexOf("\n\n") + 1));
+          }
+        });
+        res.on("error", () => {});
+      },
+    );
     req.on("error", (err: NodeJS.ErrnoException) => {
       if (err.code === "ECONNRESET") return;
       reject(err);
@@ -260,5 +331,9 @@ test("mid-stream client disconnect evicts the client and server keeps serving", 
   assert.ok(line2, "second connect missing data line");
   const snap2 = JSON.parse(line2!.slice("data: ".length));
   assert.equal(snap2.roster.openclaw[0].name, "ada");
-  assert.equal(snap2.health.ada.ok, true, "second snapshot was stale, not a fresh read");
+  assert.equal(
+    snap2.health.ada.ok,
+    true,
+    "second snapshot was stale, not a fresh read",
+  );
 });

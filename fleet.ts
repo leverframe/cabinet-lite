@@ -60,7 +60,11 @@ function loadJson(p: string | undefined): { agents: any[] } {
   }
 }
 
-export function loadRosters(agentsPath?: string, hermesPath?: string, genericPath?: string) {
+export function loadRosters(
+  agentsPath?: string,
+  hermesPath?: string,
+  genericPath?: string,
+) {
   const openclaw: AgentEntry[] = loadJson(agentsPath).agents;
   const hermes: HermesEntry[] = loadJson(hermesPath).agents;
   const generic: AgentEntry[] = loadJson(genericPath).agents;
@@ -89,7 +93,10 @@ export async function agentHealth(a: {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), a.timeoutMs ?? 5000);
   try {
-    const r = await fetch(`http://${a.host}:${a.port}${a.healthPath ?? "/health"}`, { signal: ctl.signal });
+    const r = await fetch(
+      `http://${a.host}:${a.port}${a.healthPath ?? "/health"}`,
+      { signal: ctl.signal },
+    );
     return await r.json();
   } finally {
     clearTimeout(timer);
@@ -119,7 +126,11 @@ function probeEntries(roster: ReturnType<typeof loadRosters>): AgentEntry[] {
   return [...roster.openclaw, ...roster.generic];
 }
 
-export function createFleet(agentsPath?: string, hermesPath?: string, opts?: FleetOptions) {
+export function createFleet(
+  agentsPath?: string,
+  hermesPath?: string,
+  opts?: FleetOptions,
+) {
   const roster = loadRosters(agentsPath, hermesPath, opts?.genericPath);
   const healths = new Map<string, Health>();
   const transitionFns: TransitionFn[] = [];
@@ -167,7 +178,10 @@ export function createFleet(agentsPath?: string, hermesPath?: string, opts?: Fle
           try {
             fn(feed);
           } catch (err) {
-            console.error(`[fleet] transition subscriber threw for ${agent.name}:`, err);
+            console.error(
+              `[fleet] transition subscriber threw for ${agent.name}:`,
+              err,
+            );
           }
         }
       }

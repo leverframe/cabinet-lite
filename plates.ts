@@ -15,14 +15,25 @@ export type CabinetPlate =
   | { kind: "needs_you"; ok: false; error: string };
 
 export type FleetHealthPlate =
-  | { kind: "fleet_health"; ok: true; healthy: number; total: number; threshold: number; status: string }
+  | {
+      kind: "fleet_health";
+      ok: true;
+      healthy: number;
+      total: number;
+      threshold: number;
+      status: string;
+    }
   | { kind: "fleet_health"; ok: false; error: string };
 
 function errMsg(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-async function getJson(base: string, path: string, timeoutMs: number): Promise<unknown> {
+async function getJson(
+  base: string,
+  path: string,
+  timeoutMs: number,
+): Promise<unknown> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
@@ -34,29 +45,57 @@ async function getJson(base: string, path: string, timeoutMs: number): Promise<u
   }
 }
 
-export async function fetchCabinetTasks(base: string, timeoutMs = 5000): Promise<CabinetPlate> {
+export async function fetchCabinetTasks(
+  base: string,
+  timeoutMs = 5000,
+): Promise<CabinetPlate> {
   try {
-    const parsed: unknown = await getJson(base, "/api/tasks?state=active", timeoutMs);
+    const parsed: unknown = await getJson(
+      base,
+      "/api/tasks?state=active",
+      timeoutMs,
+    );
     const body = parsed as { tasks?: unknown } | null;
-    const tasks = Array.isArray(parsed) ? parsed : Array.isArray(body?.tasks) ? body.tasks : null;
-    if (!tasks) return { kind: "needs_you", ok: false, error: "unexpected /api/tasks shape" };
+    const tasks = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(body?.tasks)
+        ? body.tasks
+        : null;
+    if (!tasks)
+      return {
+        kind: "needs_you",
+        ok: false,
+        error: "unexpected /api/tasks shape",
+      };
     return { kind: "needs_you", ok: true, tasks: tasks as CabinetTask[] };
   } catch (err) {
     return { kind: "needs_you", ok: false, error: errMsg(err) };
   }
 }
 
-export async function fetchFleetHealth(base: string, timeoutMs = 5000): Promise<FleetHealthPlate> {
+export async function fetchFleetHealth(
+  base: string,
+  timeoutMs = 5000,
+): Promise<FleetHealthPlate> {
   try {
     const parsed: unknown = await getJson(base, "/fleet-health", timeoutMs);
-    const body = parsed as { healthy?: unknown; total?: unknown; threshold?: unknown; status?: unknown } | null;
+    const body = parsed as {
+      healthy?: unknown;
+      total?: unknown;
+      threshold?: unknown;
+      status?: unknown;
+    } | null;
     if (
       typeof body?.healthy !== "number" ||
       typeof body?.total !== "number" ||
       typeof body?.threshold !== "number" ||
       typeof body?.status !== "string"
     ) {
-      return { kind: "fleet_health", ok: false, error: "unexpected /fleet-health shape" };
+      return {
+        kind: "fleet_health",
+        ok: false,
+        error: "unexpected /fleet-health shape",
+      };
     }
     return {
       kind: "fleet_health",

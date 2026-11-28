@@ -4,132 +4,585 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>cabinet-lite — signal box</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='12' fill='%23FFB000'/%3E%3Crect x='26' y='18' width='76' height='92' rx='3' fill='%23141515'/%3E%3Crect x='35' y='27' width='58' height='35' fill='%23C2C7CC'/%3E%3Crect x='53' y='41' width='22' height='7' rx='3.5' fill='%23141515'/%3E%3Crect x='35' y='70' width='58' height='31' fill='%23C2C7CC'/%3E%3Crect x='53' y='82' width='22' height='7' rx='3.5' fill='%23141515'/%3E%3Ccircle cx='83' cy='36' r='4.5' fill='%232FD08A'/%3E%3C/svg%3E" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='12' fill='%23FFB000'/%3E%3Crect x='26' y='18' width='76' height='92' rx='3' fill='%23141515'/%3E%3Crect x='35' y='27' width='58' height='35' fill='%23C2C7CC'/%3E%3Crect x='53' y='41' width='22' height='7' rx='3.5' fill='%23141515'/%3E%3Crect x='35' y='70' width='58' height='31' fill='%23C2C7CC'/%3E%3Crect x='53' y='82' width='22' height='7' rx='3.5' fill='%23141515'/%3E%3Ccircle cx='83' cy='36' r='4.5' fill='%232FD08A'/%3E%3C/svg%3E"
+    />
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
-      html, body { margin: 0; padding: 0; background: #0A0A0A; }
-      body { font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace; }
-      button, input, select { font: inherit; }
-      .sp { background:#111213; color:#C2C7CC; font-family:'JetBrains Mono',ui-monospace,Consolas,monospace; font-size:11px; border-radius:12px; overflow:hidden; border:1px solid #1F1F1F; position:relative; margin:20px; min-height:calc(100vh - 40px); }
-      .sp * { box-sizing:border-box; }
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap");
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0a0a0a;
+      }
+      body {
+        font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      .sp {
+        background: #111213;
+        color: #c2c7cc;
+        font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+        font-size: 11px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #1f1f1f;
+        position: relative;
+        margin: 20px;
+        min-height: calc(100vh - 40px);
+      }
+      .sp * {
+        box-sizing: border-box;
+      }
       /* corner registration marks — the "plate is bolted into the frame" cue */
-      .reg { position:absolute; width:14px; height:14px; border-color:#2A2D30; border-style:solid; z-index:2; }
-      .reg.tl { top:6px; left:6px; border-width:1px 0 0 1px; }
-      .reg.tr { top:6px; right:6px; border-width:1px 1px 0 0; }
-      .reg.bl { bottom:6px; left:6px; border-width:0 0 1px 1px; }
-      .reg.br { bottom:6px; right:6px; border-width:0 1px 1px 0; }
-      .sp-top { display:flex; align-items:center; gap:14px; padding:16px 20px; border-bottom:1px solid #1F1F1F; background:#0D0E0F; }
-      .mark { width:30px; height:30px; flex:none; }
-      .sp-title { color:#FFFFFF; letter-spacing:4px; font-size:13px; font-weight:700; }
-      .sp-dim { color:#5A5F64; }
-      .digest-line { margin-left:auto; color:#5A5F64; font-size:10px; letter-spacing:1px; text-align:right; }
-      .digest-line b { color:#C2C7CC; font-weight:600; }
-      .clock { text-align:right; }
-      .clock .t { color:#FFFFFF; font-size:16px; font-weight:700; letter-spacing:2px; }
-      .clock .d { color:#5A5F64; font-size:9px; letter-spacing:1px; }
-      .live-dot { color:#00C853; font-size:10px; animation:pulse 1.1s steps(2) infinite; }
+      .reg {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-color: #2a2d30;
+        border-style: solid;
+        z-index: 2;
+      }
+      .reg.tl {
+        top: 6px;
+        left: 6px;
+        border-width: 1px 0 0 1px;
+      }
+      .reg.tr {
+        top: 6px;
+        right: 6px;
+        border-width: 1px 1px 0 0;
+      }
+      .reg.bl {
+        bottom: 6px;
+        left: 6px;
+        border-width: 0 0 1px 1px;
+      }
+      .reg.br {
+        bottom: 6px;
+        right: 6px;
+        border-width: 0 1px 1px 0;
+      }
+      .sp-top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 20px;
+        border-bottom: 1px solid #1f1f1f;
+        background: #0d0e0f;
+      }
+      .mark {
+        width: 30px;
+        height: 30px;
+        flex: none;
+      }
+      .sp-title {
+        color: #ffffff;
+        letter-spacing: 4px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .sp-dim {
+        color: #5a5f64;
+      }
+      .digest-line {
+        margin-left: auto;
+        color: #5a5f64;
+        font-size: 10px;
+        letter-spacing: 1px;
+        text-align: right;
+      }
+      .digest-line b {
+        color: #c2c7cc;
+        font-weight: 600;
+      }
+      .clock {
+        text-align: right;
+      }
+      .clock .t {
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 2px;
+      }
+      .clock .d {
+        color: #5a5f64;
+        font-size: 9px;
+        letter-spacing: 1px;
+      }
+      .live-dot {
+        color: #00c853;
+        font-size: 10px;
+        animation: pulse 1.1s steps(2) infinite;
+      }
       /* single-row banner: chips shrink (ellipsis) instead of wrapping, +N more + CTA never clip */
-      .attention { display:flex; align-items:center; gap:10px; padding:12px 20px; background:#171310; border-bottom:1px solid #3A2E10; flex-wrap:nowrap; min-width:0; }
-      .attention .att-more { color:#5A5F64; flex:none; }
-      .attention.clear { background:#101211; border-bottom:1px solid #1F1F1F; }
-      .attention.off { background:#101112; border-bottom:1px solid #1F1F1F; }
-      .att-label { color:#FFB000; letter-spacing:3px; font-size:10px; font-weight:700; flex:none; }
-      .attention.clear .att-label, .attention.off .att-label { color:#5A5F64; }
-      .att-item { border:1px solid #3A2E10; border-radius:6px; padding:5px 12px; display:flex; gap:8px; align-items:baseline; background:#111213; flex:0 1 auto; min-width:0; overflow:hidden; white-space:nowrap; }
-      .att-item b { color:#FFFFFF; font-weight:600; flex:none; }
-      .att-item .sp-dim { overflow:hidden; text-overflow:ellipsis; min-width:0; }
-      .att-cta { margin-left:auto; border:1px solid #3A2E10; border-radius:6px; padding:5px 14px; color:#FFB000; font-weight:700; letter-spacing:1px; flex:none; }
-      .att-off-text { color:#5A5F64; }
-      .sp-body { display:flex; }
-      .sp-main { flex:1; min-width:0; }
-      .sp-sec { padding:14px 20px 6px; letter-spacing:3px; color:#5A5F64; font-size:10px; font-weight:700; }
-      .tiles { display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:9px; padding:8px 20px 16px; }
-      .tile { border:1px solid #1F1F1F; border-radius:9px; padding:10px 11px 10px; background:#141516; position:relative; transition:border-color .15s; }
-      .tile:hover { border-color:#C2C7CC; }
-      .tile.busy { border-color:#3A2E10; background:#171310; }
-      .tile.busy:hover { border-color:#FFB000; }
-      .tile.down { border-color:#3A1518; }
-      .st { position:absolute; top:10px; right:10px; width:7px; height:7px; border-radius:50%; }
-      .st.live { background:#00C853; }
-      .st.busy { background:#FFB000; animation:pulse 1.1s steps(2) infinite; }
-      .st.down { background:#E5484D; }
-      .st.idle { background:#C2C7CC; opacity:.4; }
-      @keyframes pulse { 50% { opacity:.25; } }
-      .tile-name { color:#FFFFFF; font-size:11px; font-weight:700; }
-      .tile-role { color:#5A5F64; font-size:9px; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .attention {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: #171310;
+        border-bottom: 1px solid #3a2e10;
+        flex-wrap: nowrap;
+        min-width: 0;
+      }
+      .attention .att-more {
+        color: #5a5f64;
+        flex: none;
+      }
+      .attention.clear {
+        background: #101211;
+        border-bottom: 1px solid #1f1f1f;
+      }
+      .attention.off {
+        background: #101112;
+        border-bottom: 1px solid #1f1f1f;
+      }
+      .att-label {
+        color: #ffb000;
+        letter-spacing: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        flex: none;
+      }
+      .attention.clear .att-label,
+      .attention.off .att-label {
+        color: #5a5f64;
+      }
+      .att-item {
+        border: 1px solid #3a2e10;
+        border-radius: 6px;
+        padding: 5px 12px;
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        background: #111213;
+        flex: 0 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .att-item b {
+        color: #ffffff;
+        font-weight: 600;
+        flex: none;
+      }
+      .att-item .sp-dim {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+      }
+      .att-cta {
+        margin-left: auto;
+        border: 1px solid #3a2e10;
+        border-radius: 6px;
+        padding: 5px 14px;
+        color: #ffb000;
+        font-weight: 700;
+        letter-spacing: 1px;
+        flex: none;
+      }
+      .att-off-text {
+        color: #5a5f64;
+      }
+      .sp-body {
+        display: flex;
+      }
+      .sp-main {
+        flex: 1;
+        min-width: 0;
+      }
+      .sp-sec {
+        padding: 14px 20px 6px;
+        letter-spacing: 3px;
+        color: #5a5f64;
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+        gap: 9px;
+        padding: 8px 20px 16px;
+      }
+      .tile {
+        border: 1px solid #1f1f1f;
+        border-radius: 9px;
+        padding: 10px 11px 10px;
+        background: #141516;
+        position: relative;
+        transition: border-color 0.15s;
+      }
+      .tile:hover {
+        border-color: #c2c7cc;
+      }
+      .tile.busy {
+        border-color: #3a2e10;
+        background: #171310;
+      }
+      .tile.busy:hover {
+        border-color: #ffb000;
+      }
+      .tile.down {
+        border-color: #3a1518;
+      }
+      .st {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+      }
+      .st.live {
+        background: #00c853;
+      }
+      .st.busy {
+        background: #ffb000;
+        animation: pulse 1.1s steps(2) infinite;
+      }
+      .st.down {
+        background: #e5484d;
+      }
+      .st.idle {
+        background: #c2c7cc;
+        opacity: 0.4;
+      }
+      @keyframes pulse {
+        50% {
+          opacity: 0.25;
+        }
+      }
+      .tile-name {
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .tile-role {
+        color: #5a5f64;
+        font-size: 9px;
+        margin-top: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       /* the lever slot — pulled levers ANIMATE: steel/amber lever pivots through the slot.
          .tile.busy is armed for v2 (invoke); v1 renders live/down/idle states only. */
-      .slot { margin-top:9px; height:6px; background:#1F1F1F; border-radius:3px; position:relative; overflow:visible; }
-      .slot i { position:absolute; top:0; left:0; height:6px; width:34%; background:#C2C7CC; border-radius:3px; transform-origin:0 50%; }
-      .slot i.dark { background:#3A3D40; }
-      .tile.busy .slot i { background:#FFB000; animation:throw 2.2s cubic-bezier(.6,0,.4,1) infinite; }
+      .slot {
+        margin-top: 9px;
+        height: 6px;
+        background: #1f1f1f;
+        border-radius: 3px;
+        position: relative;
+        overflow: visible;
+      }
+      .slot i {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 6px;
+        width: 34%;
+        background: #c2c7cc;
+        border-radius: 3px;
+        transform-origin: 0 50%;
+      }
+      .slot i.dark {
+        background: #3a3d40;
+      }
+      .tile.busy .slot i {
+        background: #ffb000;
+        animation: throw 2.2s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+      }
       @keyframes throw {
-        0%   { width:12%; }
-        45%  { width:82%; }
-        55%  { width:82%; }
-        100% { width:12%; }
+        0% {
+          width: 12%;
+        }
+        45% {
+          width: 82%;
+        }
+        55% {
+          width: 82%;
+        }
+        100% {
+          width: 12%;
+        }
       }
-      .slot .ball { position:absolute; top:1px; width:4px; height:4px; border-radius:50%; background:#0D0E0F; left:10%; }
-      .tile.busy .slot .ball { animation:ride 2.2s cubic-bezier(.6,0,.4,1) infinite; }
+      .slot .ball {
+        position: absolute;
+        top: 1px;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #0d0e0f;
+        left: 10%;
+      }
+      .tile.busy .slot .ball {
+        animation: ride 2.2s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+      }
       @keyframes ride {
-        0%   { left:8%; }
-        45%  { left:80%; }
-        55%  { left:80%; }
-        100% { left:8%; }
+        0% {
+          left: 8%;
+        }
+        45% {
+          left: 80%;
+        }
+        55% {
+          left: 80%;
+        }
+        100% {
+          left: 8%;
+        }
       }
-      .tile-tag { position:absolute; bottom:9px; right:11px; font-size:8px; color:#5A5F64; }
-      .rhythm { display:flex; align-items:flex-end; gap:2px; padding:6px 20px 16px; height:44px; }
-      .rhythm i { flex:1; background:#2A2D30; border-radius:1px; min-height:4px; }
-      .rhythm i.on { background:#C2C7CC; }
-      .rhythm i.hot { background:#FFB000; }
-      .rhythm i.cur { outline:1px solid #5A5F64; }
-      .digest { margin:4px 20px 12px; border:1px dashed #2A2D30; border-radius:9px; padding:10px 14px; color:#5A5F64; }
-      .digest b { color:#FFFFFF; font-weight:600; }
-      .digest.hidden { display:none; }
-      .feed { border-top:1px solid #1F1F1F; }
-      .fi { display:flex; gap:12px; padding:9px 20px; border-bottom:1px solid #161718; align-items:baseline; }
-      .fi:hover { background:#141516; }
-      .fi-time { color:#5A5F64; flex:none; width:70px; font-size:10px; }
-      .fi-agent { color:#FFFFFF; flex:none; width:78px; font-weight:600; }
-      .fi-badge { font-size:9px; padding:2px 7px; border-radius:3px; border:1px solid #1F1F1F; flex:none; letter-spacing:1px; }
-      .b-oc { color:#FFB000; border-color:#3A2E10; }
-      .b-he { color:#C2C7CC; border-color:#2A2D30; }
-      .b-mcp { color:#8A9096; border-color:#2A2D30; }
-      .b-x { color:#A0A0A0; border-color:#3A3D40; }
-      .fi-prompt { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-      .fi-ms { color:#5A5F64; flex:none; margin-left:auto; font-size:10px; }
-      .fi-err { background:#151112; }
-      .fi-err .fi-prompt { color:#E5484D; }
-      .fi-link { color:#8A9096; font-size:9px; flex:none; border-bottom:1px dotted #2A2D30; }
-      .fi-empty { padding:12px 20px; color:#5A5F64; }
-      .invoke { display:flex; gap:10px; padding:14px 20px; border-top:1px solid #1F1F1F; background:#0D0E0F; align-items:center; }
-      .inv-agent { border:1px solid #1F1F1F; border-radius:7px; padding:9px 14px; color:#C2C7CC; background:#141516; }
-      .inv-box { flex:1; border:1px solid #1F1F1F; border-radius:7px; padding:9px 14px; color:#5A5F64; background:#111213; }
-      .inv-btn { border:1px solid #3A2E10; background:#171310; color:#FFB000; border-radius:7px; padding:9px 18px; font-weight:700; letter-spacing:2px; cursor:not-allowed; }
-      .inv-btn:disabled { opacity:.5; }
-      .sp-side { width:220px; border-left:1px solid #1F1F1F; background:#0D0E0F; padding:16px 20px; flex:none; }
-      .bignum { font-size:26px; font-weight:700; color:#FFFFFF; letter-spacing:1px; line-height:1.1; }
-      .bignum .u { font-size:10px; color:#5A5F64; font-weight:400; letter-spacing:2px; }
-      .kv { display:flex; justify-content:space-between; padding:6px 0; }
-      .kv b { color:#FFFFFF; font-weight:600; }
-      .kv .amber { color:#FFB000; }
-      .side-sec { letter-spacing:3px; color:#5A5F64; font-size:10px; font-weight:700; padding:18px 0 6px; }
-      .upbars { display:flex; gap:2px; margin-top:6px; }
-      .upbars i { flex:1; height:10px; background:#1F1F1F; border-radius:1px; }
-      .upbars i.ok { background:#00C853; opacity:.55; } /* future: uptime plates */
-      @media (max-width: 760px) { .sp-body { flex-direction:column; } .sp-side { width:auto; border-left:none; border-top:1px solid #1F1F1F; } }
+      .tile-tag {
+        position: absolute;
+        bottom: 9px;
+        right: 11px;
+        font-size: 8px;
+        color: #5a5f64;
+      }
+      .rhythm {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        padding: 6px 20px 16px;
+        height: 44px;
+      }
+      .rhythm i {
+        flex: 1;
+        background: #2a2d30;
+        border-radius: 1px;
+        min-height: 4px;
+      }
+      .rhythm i.on {
+        background: #c2c7cc;
+      }
+      .rhythm i.hot {
+        background: #ffb000;
+      }
+      .rhythm i.cur {
+        outline: 1px solid #5a5f64;
+      }
+      .digest {
+        margin: 4px 20px 12px;
+        border: 1px dashed #2a2d30;
+        border-radius: 9px;
+        padding: 10px 14px;
+        color: #5a5f64;
+      }
+      .digest b {
+        color: #ffffff;
+        font-weight: 600;
+      }
+      .digest.hidden {
+        display: none;
+      }
+      .feed {
+        border-top: 1px solid #1f1f1f;
+      }
+      .fi {
+        display: flex;
+        gap: 12px;
+        padding: 9px 20px;
+        border-bottom: 1px solid #161718;
+        align-items: baseline;
+      }
+      .fi:hover {
+        background: #141516;
+      }
+      .fi-time {
+        color: #5a5f64;
+        flex: none;
+        width: 70px;
+        font-size: 10px;
+      }
+      .fi-agent {
+        color: #ffffff;
+        flex: none;
+        width: 78px;
+        font-weight: 600;
+      }
+      .fi-badge {
+        font-size: 9px;
+        padding: 2px 7px;
+        border-radius: 3px;
+        border: 1px solid #1f1f1f;
+        flex: none;
+        letter-spacing: 1px;
+      }
+      .b-oc {
+        color: #ffb000;
+        border-color: #3a2e10;
+      }
+      .b-he {
+        color: #c2c7cc;
+        border-color: #2a2d30;
+      }
+      .b-mcp {
+        color: #8a9096;
+        border-color: #2a2d30;
+      }
+      .b-x {
+        color: #a0a0a0;
+        border-color: #3a3d40;
+      }
+      .fi-prompt {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .fi-ms {
+        color: #5a5f64;
+        flex: none;
+        margin-left: auto;
+        font-size: 10px;
+      }
+      .fi-err {
+        background: #151112;
+      }
+      .fi-err .fi-prompt {
+        color: #e5484d;
+      }
+      .fi-link {
+        color: #8a9096;
+        font-size: 9px;
+        flex: none;
+        border-bottom: 1px dotted #2a2d30;
+      }
+      .fi-empty {
+        padding: 12px 20px;
+        color: #5a5f64;
+      }
+      .invoke {
+        display: flex;
+        gap: 10px;
+        padding: 14px 20px;
+        border-top: 1px solid #1f1f1f;
+        background: #0d0e0f;
+        align-items: center;
+      }
+      .inv-agent {
+        border: 1px solid #1f1f1f;
+        border-radius: 7px;
+        padding: 9px 14px;
+        color: #c2c7cc;
+        background: #141516;
+      }
+      .inv-box {
+        flex: 1;
+        border: 1px solid #1f1f1f;
+        border-radius: 7px;
+        padding: 9px 14px;
+        color: #5a5f64;
+        background: #111213;
+      }
+      .inv-btn {
+        border: 1px solid #3a2e10;
+        background: #171310;
+        color: #ffb000;
+        border-radius: 7px;
+        padding: 9px 18px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        cursor: not-allowed;
+      }
+      .inv-btn:disabled {
+        opacity: 0.5;
+      }
+      .sp-side {
+        width: 220px;
+        border-left: 1px solid #1f1f1f;
+        background: #0d0e0f;
+        padding: 16px 20px;
+        flex: none;
+      }
+      .bignum {
+        font-size: 26px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 1px;
+        line-height: 1.1;
+      }
+      .bignum .u {
+        font-size: 10px;
+        color: #5a5f64;
+        font-weight: 400;
+        letter-spacing: 2px;
+      }
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+      }
+      .kv b {
+        color: #ffffff;
+        font-weight: 600;
+      }
+      .kv .amber {
+        color: #ffb000;
+      }
+      .side-sec {
+        letter-spacing: 3px;
+        color: #5a5f64;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 18px 0 6px;
+      }
+      .upbars {
+        display: flex;
+        gap: 2px;
+        margin-top: 6px;
+      }
+      .upbars i {
+        flex: 1;
+        height: 10px;
+        background: #1f1f1f;
+        border-radius: 1px;
+      }
+      .upbars i.ok {
+        background: #00c853;
+        opacity: 0.55;
+      } /* future: uptime plates */
+      @media (max-width: 760px) {
+        .sp-body {
+          flex-direction: column;
+        }
+        .sp-side {
+          width: auto;
+          border-left: none;
+          border-top: 1px solid #1f1f1f;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="sp">
-      <div class="reg tl"></div><div class="reg tr"></div><div class="reg bl"></div><div class="reg br"></div>
+      <div class="reg tl"></div>
+      <div class="reg tr"></div>
+      <div class="reg bl"></div>
+      <div class="reg br"></div>
       <div class="sp-top">
-        <svg class="mark" viewBox="0 0 128 128"><rect width="128" height="128" rx="12" fill="#FFB000"/><rect x="26" y="18" width="76" height="92" rx="3" fill="#141515"/><rect x="35" y="27" width="58" height="35" fill="#C2C7CC"/><rect x="35" y="70" width="58" height="31" fill="#C2C7CC"/><rect x="53" y="41" width="22" height="7" rx="3.5" fill="#141515"/><rect x="53" y="82" width="22" height="7" rx="3.5" fill="#141515"/><circle cx="83" cy="36" r="4.5" fill="#2FD08A"/></svg>
+        <svg class="mark" viewBox="0 0 128 128">
+          <rect width="128" height="128" rx="12" fill="#FFB000" />
+          <rect x="26" y="18" width="76" height="92" rx="3" fill="#141515" />
+          <rect x="35" y="27" width="58" height="35" fill="#C2C7CC" />
+          <rect x="35" y="70" width="58" height="31" fill="#C2C7CC" />
+          <rect x="53" y="41" width="22" height="7" rx="3.5" fill="#141515" />
+          <rect x="53" y="82" width="22" height="7" rx="3.5" fill="#141515" />
+          <circle cx="83" cy="36" r="4.5" fill="#2FD08A" />
+        </svg>
         <span class="sp-title">cabinet-lite</span>
         <span class="sp-dim">signal box · by leverframe</span>
         <span class="digest-line" id="top-digest"></span>
         <div class="clock">
-          <div class="t"><span id="clock-t">--:--:--</span> <span class="live-dot">●</span> <span style="color:#00C853;font-size:10px">LIVE</span></div>
+          <div class="t">
+            <span id="clock-t">--:--:--</span> <span class="live-dot">●</span>
+            <span style="color: #00c853; font-size: 10px">LIVE</span>
+          </div>
           <div class="d" id="clock-d">— · ET</div>
         </div>
       </div>
@@ -144,33 +597,68 @@
           <div class="sp-sec">FRAME · LEVERS</div>
           <div class="tiles" id="tiles"></div>
 
-          <div class="sp-sec">PULL RHYTHM · 24H <span style="letter-spacing:0;color:#3A3D40">— each bar 30m, amber = failures in bucket</span></div>
+          <div class="sp-sec">
+            PULL RHYTHM · 24H
+            <span style="letter-spacing: 0; color: #3a3d40"
+              >— each bar 30m, amber = failures in bucket</span
+            >
+          </div>
           <div class="rhythm" id="rhythm"></div>
 
           <div class="sp-sec">FEED · LEVER PULLS</div>
           <div class="digest hidden" id="digest"></div>
-          <div class="feed" id="feed"><div class="fi-empty">no pulls yet — the box is quiet.</div></div>
+          <div class="feed" id="feed">
+            <div class="fi-empty">no pulls yet — the box is quiet.</div>
+          </div>
 
           <div class="invoke">
             <select class="inv-agent" id="inv-agent" size="1"></select>
-            <input class="inv-box" id="inv-box" type="text" placeholder="pull a lever — prompt…" autocomplete="off" />
-            <button class="inv-btn" id="inv-btn" type="button" disabled title="GO-gated — v2">PULL</button>
+            <input
+              class="inv-box"
+              id="inv-box"
+              type="text"
+              placeholder="pull a lever — prompt…"
+              autocomplete="off"
+            />
+            <button
+              class="inv-btn"
+              id="inv-btn"
+              type="button"
+              disabled
+              title="GO-gated — v2"
+            >
+              PULL
+            </button>
           </div>
         </div>
         <div class="sp-side">
           <div class="side-sec">INTERLOCK</div>
-          <div class="bignum" id="il-routes">—<span class="u"> / — ROUTES</span></div>
-          <div class="kv"><span>levers free</span><span class="amber"><b id="il-free">—</b></span></div>
+          <div class="bignum" id="il-routes">
+            —<span class="u"> / — ROUTES</span>
+          </div>
+          <div class="kv">
+            <span>levers free</span
+            ><span class="amber"><b id="il-free">—</b></span>
+          </div>
           <div class="kv"><span>conflicts</span><b>0</b></div>
           <div class="side-sec">24H PULLS</div>
           <div class="bignum" id="pulls-num">0</div>
           <div class="kv"><span>p95 latency</span><b id="pulls-p95">—</b></div>
-          <div class="kv"><span>failures</span><b class="amber" id="pulls-fail">0</b></div>
+          <div class="kv">
+            <span>failures</span><b class="amber" id="pulls-fail">0</b>
+          </div>
           <div class="side-sec">RUNTIMES</div>
-          <div id="rt-rows"><div class="kv"><span class="sp-dim">no runtimes</span></div></div>
+          <div id="rt-rows">
+            <div class="kv"><span class="sp-dim">no runtimes</span></div>
+          </div>
           <div class="side-sec">BOX UPTIME · 14D</div>
-          <div class="upbars" id="upbars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="kv" style="padding-top:4px"><span class="sp-dim">no uptime history yet</span></div>
+          <div class="upbars" id="upbars">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i
+            ><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="kv" style="padding-top: 4px">
+            <span class="sp-dim">no uptime history yet</span>
+          </div>
         </div>
       </div>
     </div>
