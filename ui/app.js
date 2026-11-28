@@ -40,7 +40,16 @@
 
   function etDateLine(d) {
     var p = etParts(d);
-    return (p.weekday + " " + p.day + " " + p.month + " " + p.year + " · ET").toUpperCase();
+    return (
+      p.weekday +
+      " " +
+      p.day +
+      " " +
+      p.month +
+      " " +
+      p.year +
+      " · ET"
+    ).toUpperCase();
   }
 
   /* ET midnight (as a UTC ms timestamp): derive the current ET→UTC offset from wall parts */
@@ -48,14 +57,46 @@
     var p = etParts(d);
     var wallAsUtc = Date.UTC(
       Number(p.year),
-      { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 }[p.month],
+      {
+        Jan: 0,
+        Feb: 1,
+        Mar: 2,
+        Apr: 3,
+        May: 4,
+        Jun: 5,
+        Jul: 6,
+        Aug: 7,
+        Sep: 8,
+        Oct: 9,
+        Nov: 10,
+        Dec: 11,
+      }[p.month],
       Number(p.day),
       Number(p.hour === "24" ? 0 : p.hour),
       Number(p.minute),
-      Number(p.second)
+      Number(p.second),
     );
     var offsetMs = wallAsUtc - d.getTime();
-    return Date.UTC(Number(p.year), { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 }[p.month], Number(p.day)) - offsetMs;
+    return (
+      Date.UTC(
+        Number(p.year),
+        {
+          Jan: 0,
+          Feb: 1,
+          Mar: 2,
+          Apr: 3,
+          May: 4,
+          Jun: 5,
+          Jul: 6,
+          Aug: 7,
+          Sep: 8,
+          Oct: 9,
+          Nov: 10,
+          Dec: 11,
+        }[p.month],
+        Number(p.day),
+      ) - offsetMs
+    );
   }
 
   function fmtMs(ms) {
@@ -64,12 +105,22 @@
 
   function fmtP95(entries) {
     if (!entries.length) return "—";
-    var ms = entries.map(function (e) { return e.ms; }).sort(function (a, b) { return a - b; });
+    var ms = entries
+      .map(function (e) {
+        return e.ms;
+      })
+      .sort(function (a, b) {
+        return a - b;
+      });
     var idx = Math.max(0, Math.ceil(ms.length * 0.95) - 1);
     return fmtMs(ms[idx]);
   }
 
-  var BADGE = { openclaw: ["b-oc", "OPENCLAW"], hermes: ["b-he", "HERMES"], mcp: ["b-mcp", "MCP"] };
+  var BADGE = {
+    openclaw: ["b-oc", "OPENCLAW"],
+    hermes: ["b-he", "HERMES"],
+    mcp: ["b-mcp", "MCP"],
+  };
 
   /* runtime is data: known labels keep their styled badge, anything else gets
      the generic steel badge with the label UPPERCASED */
@@ -93,35 +144,61 @@
         .slice(0, MAX_CHIPS)
         .map(function (t) {
           var who = t.assigned_to || "unassigned";
-          return '<span class="att-item"><b>' + esc(who) + "</b> <span class=\"sp-dim\">" + esc(t.title) + "</span></span>";
+          return (
+            '<span class="att-item"><b>' +
+            esc(who) +
+            '</b> <span class="sp-dim">' +
+            esc(t.title) +
+            "</span></span>"
+          );
         })
         .join("");
       if (total > MAX_CHIPS) {
-        chips += '<span class="att-item att-more">+' + (total - MAX_CHIPS) + " more</span>";
+        chips +=
+          '<span class="att-item att-more">+' +
+          (total - MAX_CHIPS) +
+          " more</span>";
       }
       el.className = "attention";
       el.innerHTML =
-        '<span class="att-label">NEEDS YOU</span>' + chips +
-        '<span class="att-cta">' + total + " ITEMS →</span>";
+        '<span class="att-label">NEEDS YOU</span>' +
+        chips +
+        '<span class="att-cta">' +
+        total +
+        " ITEMS →</span>";
     } else if (plate.ok) {
       el.className = "attention clear";
       el.innerHTML =
         '<span class="att-label">NEEDS YOU</span><span class="sp-dim">nothing. interlock clear — ' +
-        counts.healthyRoutes + " levers healthy, 0 conflicts.</span>";
+        counts.healthyRoutes +
+        " levers healthy, 0 conflicts.</span>";
     } else {
       el.className = "attention off";
       el.innerHTML =
-        '<span class="att-label">NEEDS YOU</span><span class="att-off-text">cabinet offline — ' + esc(plate.error) + "</span>";
+        '<span class="att-label">NEEDS YOU</span><span class="att-off-text">cabinet offline — ' +
+        esc(plate.error) +
+        "</span>";
     }
   }
 
   function tileHtml(a, label, state) {
-    var slot = state === "live" ? '<i></i>' : '<i class="dark"></i>';
+    var slot = state === "live" ? "<i></i>" : '<i class="dark"></i>';
     return (
-      '<div class="tile' + (state === "down" ? " down" : "") + '"><span class="st ' + state + '"></span>' +
-      '<div class="tile-name">' + esc(a.name) + '</div><div class="tile-role">' + esc(a.role) + "</div>" +
-      '<div class="slot">' + slot + '<span class="ball"></span></div><span class="tile-tag">' +
-      esc(label.slice(0, 2).toLowerCase()) + "</span></div>"
+      '<div class="tile' +
+      (state === "down" ? " down" : "") +
+      '"><span class="st ' +
+      state +
+      '"></span>' +
+      '<div class="tile-name">' +
+      esc(a.name) +
+      '</div><div class="tile-role">' +
+      esc(a.role) +
+      "</div>" +
+      '<div class="slot">' +
+      slot +
+      '<span class="ball"></span></div><span class="tile-tag">' +
+      esc(label.slice(0, 2).toLowerCase()) +
+      "</span></div>"
     );
   }
 
@@ -133,22 +210,25 @@
     /* openclaw + generic are the HTTP-probed slices: health-driven dot.
        mcp-labeled entries ARE probed server-side; their health is just
        not displayed, so they render static idle. */
-    [].concat(roster.openclaw || [], roster.generic || []).forEach(function (a) {
-      var label = entryLabel(a, false);
-      if (label === "mcp") {
-        out.push(tileHtml(a, label, "idle"));
-        return;
-      }
-      var h = health[a.name];
-      var state = "idle";
-      if (h && h.error) state = "down";
-      else if (h && !h.error && h.ok) state = "live";
-      out.push(tileHtml(a, label, state));
-    });
+    []
+      .concat(roster.openclaw || [], roster.generic || [])
+      .forEach(function (a) {
+        var label = entryLabel(a, false);
+        if (label === "mcp") {
+          out.push(tileHtml(a, label, "idle"));
+          return;
+        }
+        var h = health[a.name];
+        var state = "idle";
+        if (h && h.error) state = "down";
+        else if (h && !h.error && h.ok) state = "live";
+        out.push(tileHtml(a, label, state));
+      });
     (roster.hermes || []).forEach(function (h) {
       out.push(tileHtml(h, entryLabel(h, true), "idle"));
     });
-    el.innerHTML = out.join("") ||
+    el.innerHTML =
+      out.join("") ||
       '<div class="fi-empty" style="grid-column:1/-1">no levers in the frame — roster empty.</div>';
   }
 
@@ -169,7 +249,8 @@
     var max = Math.max.apply(null, counts);
     var bars = [];
     for (var i = N - 1; i >= 0; i--) {
-      var pct = counts[i] === 0 ? 0 : Math.max(8, Math.round((counts[i] / max) * 100));
+      var pct =
+        counts[i] === 0 ? 0 : Math.max(8, Math.round((counts[i] / max) * 100));
       var cls = counts[i] === 0 ? "" : hot[i] ? "hot" : "on";
       if (i === 0) cls += (cls ? " " : "") + "cur";
       bars.push('<i class="' + cls + '" style="height:' + pct + '%"></i>');
@@ -187,14 +268,18 @@
     if (sessionFails > 0) {
       digestEl.className = "digest";
       digestEl.innerHTML =
-        "while you were away — <b>" + sessionFails + "</b> failure" + (sessionFails === 1 ? "" : "s") +
+        "while you were away — <b>" +
+        sessionFails +
+        "</b> failure" +
+        (sessionFails === 1 ? "" : "s") +
         " since you opened this box.";
     } else {
       digestEl.className = "digest hidden";
       digestEl.innerHTML = "";
     }
     if (!feed.length) {
-      el.innerHTML = '<div class="fi-empty">no pulls yet — the box is quiet.</div>';
+      el.innerHTML =
+        '<div class="fi-empty">no pulls yet — the box is quiet.</div>';
       return;
     }
     el.innerHTML = feed
@@ -202,11 +287,23 @@
         var badge = badgeFor(e.runtime);
         var err = !e.ok;
         return (
-          '<div class="fi' + (err ? " fi-err" : "") + '"><span class="fi-time">' + esc(etTime(new Date(e.ts))) +
-          '</span><span class="fi-agent">' + esc(e.agent) +
-          '</span><span class="fi-badge ' + badge[0] + '">' + badge[1] + "</span>" +
-          '<span class="fi-prompt">' + esc(e.summary) + "</span>" +
-          '<span class="fi-ms">' + (e.ms === 0 ? "—" : fmtMs(e.ms)) + "</span>" +
+          '<div class="fi' +
+          (err ? " fi-err" : "") +
+          '"><span class="fi-time">' +
+          esc(etTime(new Date(e.ts))) +
+          '</span><span class="fi-agent">' +
+          esc(e.agent) +
+          '</span><span class="fi-badge ' +
+          badge[0] +
+          '">' +
+          badge[1] +
+          "</span>" +
+          '<span class="fi-prompt">' +
+          esc(e.summary) +
+          "</span>" +
+          '<span class="fi-ms">' +
+          (e.ms === 0 ? "—" : fmtMs(e.ms)) +
+          "</span>" +
           (err ? '<span class="fi-link">context →</span>' : "") +
           "</div>"
         );
@@ -219,7 +316,7 @@
     var agents = (snap.roster && snap.roster.openclaw) || [];
     var prev = sel.value; /* preserve selection across re-renders */
     if (!agents.length) {
-      sel.innerHTML = '<option>—</option>';
+      sel.innerHTML = "<option>—</option>";
       return;
     }
     sel.innerHTML = agents
@@ -235,12 +332,17 @@
 
   function renderSide(snap, feed, counts) {
     document.getElementById("il-routes").innerHTML =
-      counts.healthyRoutes + '<span class="u"> / ' + counts.totalRoutes + " ROUTES</span>";
+      counts.healthyRoutes +
+      '<span class="u"> / ' +
+      counts.totalRoutes +
+      " ROUTES</span>";
     document.getElementById("il-free").textContent = String(counts.leversFree);
     document.getElementById("pulls-num").textContent = String(feed.length);
     document.getElementById("pulls-p95").textContent = fmtP95(feed);
     document.getElementById("pulls-fail").textContent = String(
-      feed.filter(function (e) { return !e.ok; }).length
+      feed.filter(function (e) {
+        return !e.ok;
+      }).length,
     );
     renderRuntimes(snap, feed);
   }
@@ -250,12 +352,14 @@
      dynamically — max 6 rows, then a "+N more" line. */
   function renderRuntimes(snap, feed) {
     var el = document.getElementById("rt-rows");
-    var roster = (snap.roster || { openclaw: [], hermes: [], generic: [] });
+    var roster = snap.roster || { openclaw: [], hermes: [], generic: [] };
     var counts = {};
-    [].concat(roster.openclaw || [], roster.generic || []).forEach(function (a) {
-      var label = entryLabel(a, false);
-      counts[label] = (counts[label] || 0) + 1;
-    });
+    []
+      .concat(roster.openclaw || [], roster.generic || [])
+      .forEach(function (a) {
+        var label = entryLabel(a, false);
+        counts[label] = (counts[label] || 0) + 1;
+      });
     (roster.hermes || []).forEach(function (h) {
       var label = entryLabel(h, true);
       counts[label] = (counts[label] || 0) + 1;
@@ -270,19 +374,35 @@
     var labels = Object.keys(counts).sort();
     var MAX_ROWS = 6;
     var rows = labels.slice(0, MAX_ROWS).map(function (label) {
-      return '<div class="kv"><span>' + esc(label) + "</span><b>" + counts[label] + "</b></div>";
+      return (
+        '<div class="kv"><span>' +
+        esc(label) +
+        "</span><b>" +
+        counts[label] +
+        "</b></div>"
+      );
     });
     if (labels.length > MAX_ROWS) {
-      rows.push('<div class="kv"><span class="sp-dim">+' + (labels.length - MAX_ROWS) + " more</span></div>");
+      rows.push(
+        '<div class="kv"><span class="sp-dim">+' +
+          (labels.length - MAX_ROWS) +
+          " more</span></div>",
+      );
     }
-    el.innerHTML = rows.join("") || '<div class="kv"><span class="sp-dim">no runtimes</span></div>';
+    el.innerHTML =
+      rows.join("") ||
+      '<div class="kv"><span class="sp-dim">no runtimes</span></div>';
   }
 
   function renderTopDigest(feed) {
     var el = document.getElementById("top-digest");
     var dayStart = etDayStartMs(new Date());
-    var today = feed.filter(function (e) { return e.ts >= dayStart; });
-    var fails = today.filter(function (e) { return !e.ok; });
+    var today = feed.filter(function (e) {
+      return e.ts >= dayStart;
+    });
+    var fails = today.filter(function (e) {
+      return !e.ok;
+    });
     var escal = today.filter(function (e) {
       return !e.ok && /needs_human|escalat/i.test(e.summary || "");
     });
@@ -290,8 +410,12 @@
       return "<b>" + n + "</b> " + word + (n === 1 ? "" : "s");
     }
     el.innerHTML =
-      "since 00:00 — " + plural(today.length, "pull") + " · " + plural(fails.length, "failure") +
-      " · " + plural(escal.length, "escalation");
+      "since 00:00 — " +
+      plural(today.length, "pull") +
+      " · " +
+      plural(fails.length, "failure") +
+      " · " +
+      plural(escal.length, "escalation");
   }
 
   function computeCounts(snap) {

@@ -38,7 +38,9 @@ function makeMockGateway(): http.Server {
         connection: "keep-alive",
       });
       if (auth !== "Bearer test-token") {
-        res.write('data: {"choices":[{"delta":{"content":"unauthorized"}}]}\n\n');
+        res.write(
+          'data: {"choices":[{"delta":{"content":"unauthorized"}}]}\n\n',
+        );
         res.write("data: [DONE]\n\n");
         res.end();
         return;

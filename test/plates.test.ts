@@ -19,7 +19,17 @@ test("cabinet plate parses tasks", async (t) => {
   const port = await serve(t, (_req, res) => {
     res.end(
       JSON.stringify([
-        { id: 5243, title: "rotation", assigned_to: "darlene", priority: 1, state: "active", claimed_by: "", created_at: 1, due_at: null, fail_count: 0 },
+        {
+          id: 5243,
+          title: "rotation",
+          assigned_to: "darlene",
+          priority: 1,
+          state: "active",
+          claimed_by: "",
+          created_at: 1,
+          due_at: null,
+          fail_count: 0,
+        },
       ]),
     );
   });
@@ -43,7 +53,9 @@ test("cabinet plate hits /api/tasks?state=active", async (t) => {
 
 test("fleet-health plate parses aggregate", async (t) => {
   const port = await serve(t, (_req, res) => {
-    res.end(JSON.stringify({ healthy: 14, total: 15, threshold: 14, status: "ok" }));
+    res.end(
+      JSON.stringify({ healthy: 14, total: 15, threshold: 14, status: "ok" }),
+    );
   });
   const p = await fetchFleetHealth(`http://127.0.0.1:${port}`, 1000);
   assert.equal((p as any).kind, "fleet_health");
@@ -74,8 +86,14 @@ test("plates abort via AbortController when server accepts but never responds", 
   const elapsed = Date.now() - started;
   assert.equal(p.ok, false);
   assert.equal(typeof (p as any).error, "string");
-  assert.ok(elapsed >= 250, `expected abort at ~300ms, resolved after ${elapsed}ms`);
-  assert.ok(elapsed < 5000, `abort must not fall back to the 5s default, took ${elapsed}ms`);
+  assert.ok(
+    elapsed >= 250,
+    `expected abort at ~300ms, resolved after ${elapsed}ms`,
+  );
+  assert.ok(
+    elapsed < 5000,
+    `abort must not fall back to the 5s default, took ${elapsed}ms`,
+  );
 });
 
 test("plates degrade on non-JSON response", async (t) => {
